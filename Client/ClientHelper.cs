@@ -53,7 +53,7 @@ namespace New_MyHttpServer
                 postStream.Close();
 
                 //获取rsp的流
-                HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                HttpWebResponse response = request.GetResponse() as HttpWebResponse;//使用异步
                 Stream instream = response.GetResponseStream();
                 StreamReader sr = new StreamReader(instream, Encoding.UTF8);
                 string content = sr.ReadToEnd();

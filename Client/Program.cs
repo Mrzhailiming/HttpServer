@@ -12,10 +12,15 @@ namespace New_MyHttpServer
             string uploadUrl = "http://127.0.0.1:8080";
             string imgPath = exePath;
             string fileparameter = "file";
-            client.UploadImage(uploadUrl, imgPath, fileparameter);
 
-            Console.WriteLine("SendSuccess");
-            Console.ReadLine();
+            while(true)
+            {
+                if(Console.ReadLine() == "s")
+                {
+                    client.UploadImage(uploadUrl, imgPath, fileparameter);
+                    Console.WriteLine("SendSuccess");
+                }
+            }
         }
     }
 }

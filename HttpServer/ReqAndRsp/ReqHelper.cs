@@ -116,17 +116,19 @@ namespace server
             }
             try
             {
-                StreamReader read = new StreamReader(request.InputStream, Encoding.UTF8);
-                string ret = read.ReadToEnd();//made ret的长度和流的长度不一样
-                WriteToFile(ret);
+                //StreamReader read = new StreamReader(request.InputStream, Encoding.UTF8);
+                //string ret = read.ReadToEnd();//made ret的长度和流的长度不一样
+                //WriteToFile(ret);
 
-                //byte[] buff = new byte[request.ContentLength64];
-                //request.InputStream.Read(buff, 0, (int)request.ContentLength64);
-                //using (FileStream newFileS = CreateFileStream(filepath, "nice.jpg"))
-                //{
-                //    newFileS.Write(buff, 0, buff.Length);
-                //}
-
+                //测试client
+                byte[] buff = new byte[request.ContentLength64];
+                request.InputStream.Read(buff, 0, (int)request.ContentLength64);
+                using (FileStream newFileS = CreateFileStream(filepath, "nice.jpg"))
+                {
+                    newFileS.Write(buff, 0, buff.Length);
+                    newFileS.Flush();
+                    newFileS.Close();
+                }
             }
             catch (Exception ex)
             {
