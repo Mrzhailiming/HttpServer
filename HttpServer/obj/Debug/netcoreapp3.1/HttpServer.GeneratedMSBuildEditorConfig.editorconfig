@@ -1,0 +1,3 @@
+is_global = true
+build_property.RootNamespace = HttpServer
+build_property.ProjectDir = F:\Code\GitHub\HttpServer\HttpServer\

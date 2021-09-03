@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="ssss" />
+    <title>HTTPServer</title>
+	
+<script type="text/javascript">
+			var
+				fileInput = document.getElementById('test-image-file'),
+				info = document.getElementById('test-file-info'),
+				preview = document.getElementById('test-image-preview');
+			// 监听change事件:
+			fileInput.addEventListener('change', function() {
+						// 清除背景图片:
+						preview.style.backgroundImage = '';
+						// 检查文件是否选择:
+						if (!fileInput.value) {
+							info.innerHTML = '没有选择文件';
+							return;
+						}
+						// 获取File引用:
+						var file = fileInput.files[0];
+						//判断文件大小
+						var size = file.size;
+						if (size >= 1 * 1024 * 1024) {
+							alert('文件大小超出限制');
+							return false;
+						}
+						// 获取File信息:
+						info.innerHTML = '文件名称: ' + file.name + '<br>' +
+							'文件大小: ' + file.size + '<br>' +
+							'上传时间: ' + file.lastModifiedDate;
+						if (file.type !== 'image/jpeg' && file.type !== 'image/png' && file.type !== 'image/gif') {
+								alert('不是有效的图片文件!');
+								return;
+							}
+							// 读取文件:
+							var reader = new FileReader();
+							reader.onload = function(e) {
+								var
+									data = e.target.result;         
+								preview.style.backgroundImage = 'url(' + data + ')';
+							};
+							// 以DataURL的形式读取文件:
+							reader.readAsDataURL(file);
+							
+						});
+		</script>
+</head>
+
+<body>
+
+    <form method="post" enctype="application/json" id="file_upload">
+　　<p>图片预览：</p>
+　　<div id="preview"></div>
+　　<p>
+　　　　<input type="file" id="test-image-file" name="test" accept="image/gif, image/jpeg, image/png, image/jpg">
+		<button type="submit">上传图片</button>
+　　</p>
+	<p id="test-file-info"></p>
+	</form>
+
+</body>
+
+</html>
