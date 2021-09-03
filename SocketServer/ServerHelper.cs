@@ -187,6 +187,12 @@ namespace SocketServer
                 Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
                 Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
 
+                byte[] cmd = new byte[e.BytesTransferred];
+
+                Buffer.BlockCopy(e.Buffer, 0, cmd, 0, e.BytesTransferred);
+
+                ProcessCmd(cmd);
+
                 //echo the data received back to the client
                 e.SetBuffer(e.Offset, e.BytesTransferred);
                 bool willRaiseEvent = token.Socket.SendAsync(e);
@@ -246,6 +252,18 @@ namespace SocketServer
 
             m_maxNumberAcceptedClients.Release();
             Console.WriteLine("A client has been disconnected from the server. There are {0} clients connected to the server", m_numConnectedSockets);
+        }
+
+        private static void ProcessCmd(byte[] cmd)
+        {
+            try
+            {
+                string ret = cmd[0].ToString();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Log(LogType.Exception_ProcessCmd, ex.ToString());
+            }
         }
     }
 }

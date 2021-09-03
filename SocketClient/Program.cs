@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace SocketClient
 {
@@ -6,8 +7,17 @@ namespace SocketClient
     {
         static void Main(string[] args)
         {
+            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
+            ClientHelper client = new ClientHelper(iPEndPoint, 1024 * 1024);
 
-            Console.WriteLine("Hello World!");
+            while (true)
+            {
+                if (Console.ReadLine() == "s")
+                {
+                    client.Send("SendSuccess");
+                }
+            }
+
         }
     }
 }

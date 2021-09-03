@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SocketServer
+namespace SocketClient
 {
     public enum LogType
     {
@@ -10,7 +10,6 @@ namespace SocketServer
         PostNoBody,
         Error_FileNameNULL,
         Error_BuffFull,
-        Exception_ProcessCmd
     }
     public class LogHelper
     {

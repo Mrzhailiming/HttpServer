@@ -7,13 +7,6 @@ namespace SocketServer.Data
 {
     public class AsyncUserToken
     {
-        public Socket Socket 
-        { 
-            get 
-            {
-                return Socket; 
-            } 
-            set { Socket = value; } 
-        }
+        public Socket Socket; 
     }
 }
