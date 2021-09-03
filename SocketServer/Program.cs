@@ -7,8 +7,8 @@ namespace SocketServer
     {
         static void Main(string[] args)
         {
-            int numConnections = 1;
-            int receiveBufferSize = 100;
+            int numConnections = 100;
+            int receiveBufferSize = 1024 * 1024;
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
 
             ServerHelper server = new ServerHelper(numConnections, receiveBufferSize);
@@ -17,6 +17,12 @@ namespace SocketServer
 
             Console.WriteLine("Hello World!");
             Console.ReadLine();
+        }
+
+
+        static void Test()
+        {
+
         }
     }
 }

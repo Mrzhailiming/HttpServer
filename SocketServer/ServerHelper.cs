@@ -1,10 +1,12 @@
 ﻿using SocketServer.Data;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SocketServer
 {
@@ -259,11 +261,48 @@ namespace SocketServer
             try
             {
                 string ret = cmd[0].ToString();
+                //string msg = Encoding.UTF8.GetString(cmd);
+                string filepath = string.Format(@"{0}\Socket", Environment.CurrentDirectory);
+                using (FileStream fileStream = CreateFileStream(filepath, "test.jpg"))
+                {
+                    fileStream.Write(cmd, 0, cmd.Length);
+                    fileStream.Flush();
+                    fileStream.Close();
+                }
             }
             catch (Exception ex)
             {
                 LogHelper.Log(LogType.Exception_ProcessCmd, ex.ToString());
             }
+        }
+
+        /// <summary>
+        /// 创建文件流
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private static FileStream CreateFileStream(string filepath, string name)
+        {
+            FileStream ret = null;
+            try
+            {
+                if (!Directory.Exists(filepath))
+                {
+                    Directory.CreateDirectory(filepath);
+                }
+                string fileFullPath = $"{filepath}\\{name}";
+                if (File.Exists(fileFullPath))
+                {
+                    fileFullPath = $"{filepath}\\new_{DateTime.Now.Ticks}_{name}";
+                }
+                ret = new FileStream(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Log(LogType.Exception, ex.ToString());
+            }
+            return ret;
         }
     }
 }

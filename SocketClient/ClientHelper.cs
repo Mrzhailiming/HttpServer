@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -42,15 +43,22 @@ namespace SocketClient
         }
         public void Send(string msg)
         {
-            byte[] sendBuf = System.Text.Encoding.Default.GetBytes(msg);
+            //byte[] sendBuf = System.Text.Encoding.UTF8.GetBytes(msg);
+
+            string imgPath = string.Format(@"{0}\root\test.jpg", Environment.CurrentDirectory);
+            byte[] sendBuf;
+
+            using (FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+            {
+                sendBuf = new byte[fs.Length];
+                fs.Read(sendBuf, 0, sendBuf.Length);
+                fs.Close();
+            }
 
             Buffer.BlockCopy(sendBuf, 0, _buff, 0, sendBuf.Length);
 
             _SocketAsyncEventArgs.SetBuffer(0, sendBuf.Length);
-
             bool willRaiseEvent = _socket.SendAsync(_SocketAsyncEventArgs);
-
-
             if (!willRaiseEvent)
             {
                 ProcessSend(_SocketAsyncEventArgs);
