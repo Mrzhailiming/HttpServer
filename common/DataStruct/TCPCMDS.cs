@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SocketServer.Data
+namespace DataStruct
 {
     public enum TCPCMDS
     {

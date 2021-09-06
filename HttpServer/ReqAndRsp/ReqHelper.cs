@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Compression;
+using Helper;
 
 namespace server
 {

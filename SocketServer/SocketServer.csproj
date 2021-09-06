@@ -9,4 +9,9 @@
     <OutputPath>..\HttpServer\bin\Debug</OutputPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\common\DataStruct\DataStruct.csproj" />
+    <ProjectReference Include="..\common\FileHelper\Helper.csproj" />
+  </ItemGroup>
+
 </Project>

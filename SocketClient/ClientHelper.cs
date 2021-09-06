@@ -45,9 +45,6 @@ namespace SocketClient
             catch (Exception ex)
             {
                 LogHelper.Log(LogType.Exception, ex.ToString());
-            }
-            finally
-            {
                 Thread.Sleep(1000);
                 Reconnect();
             }

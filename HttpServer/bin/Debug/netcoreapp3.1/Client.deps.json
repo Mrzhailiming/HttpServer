@@ -8,15 +8,24 @@
     ".NETCoreApp,Version=v3.1": {
       "Client/1.0.0": {
         "dependencies": {
-          "HttpServer": "1.0.0"
+          "DataStruct": "1.0.0",
+          "Helper": "1.0.0"
         },
         "runtime": {
           "Client.dll": {}
         }
       },
-      "HttpServer/1.0.0": {
+      "DataStruct/1.0.0": {
         "runtime": {
-          "HttpServer.dll": {}
+          "DataStruct.dll": {}
+        }
+      },
+      "Helper/1.0.0": {
+        "dependencies": {
+          "DataStruct": "1.0.0"
+        },
+        "runtime": {
+          "Helper.dll": {}
         }
       }
     }
@@ -27,7 +36,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "HttpServer/1.0.0": {
+    "DataStruct/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Helper/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

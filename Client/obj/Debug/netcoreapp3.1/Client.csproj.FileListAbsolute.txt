@@ -1,7 +1,3 @@
-F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\HttpServer.deps.json
-F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\HttpServer.runtimeconfig.json
-F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\HttpServer.runtimeconfig.dev.json
-F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\HttpServer.exe
 F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\Client.exe
 F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\Client.deps.json
 F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\Client.runtimeconfig.json

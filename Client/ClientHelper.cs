@@ -1,5 +1,4 @@
 ﻿using Helper;
-using server;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +61,6 @@ namespace New_MyHttpServer
             }
             catch (Exception ex)
             {
-                //跨项目引用loghelper
                 LogHelper.Log(LogType.Exception, ex.ToString());
             }
             

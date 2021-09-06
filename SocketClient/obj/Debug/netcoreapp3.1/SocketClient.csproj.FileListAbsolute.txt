@@ -15,6 +15,7 @@ F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.Gene
 F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.AssemblyInfoInputs.cache
 F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.AssemblyInfo.cs
 F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.csproj.CoreCompileInputs.cache
+F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.csproj.CopyComplete
 F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.dll
 F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.pdb
 F:\Code\GitHub\HttpServer\SocketClient\obj\Debug\netcoreapp3.1\SocketClient.genruntimeconfig.cache

@@ -2,9 +2,22 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v3.1": {
+      "DataStruct/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v3.1",
+        "compile": {
+          "bin/placeholder/DataStruct.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DataStruct.dll": {}
+        }
+      },
       "Helper/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v3.1",
+        "dependencies": {
+          "DataStruct": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/Helper.dll": {}
         },
@@ -15,6 +28,11 @@
     }
   },
   "libraries": {
+    "DataStruct/1.0.0": {
+      "type": "project",
+      "path": "../common/DataStruct/DataStruct.csproj",
+      "msbuildProject": "../common/DataStruct/DataStruct.csproj"
+    },
     "Helper/1.0.0": {
       "type": "project",
       "path": "../common/FileHelper/Helper.csproj",
@@ -23,6 +41,7 @@
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v3.1": [
+      "DataStruct >= 1.0.0",
       "Helper >= 1.0.0"
     ]
   },
@@ -63,6 +82,9 @@
         "netcoreapp3.1": {
           "targetAlias": "netcoreapp3.1",
           "projectReferences": {
+            "F:\\Code\\GitHub\\HttpServer\\common\\DataStruct\\DataStruct.csproj": {
+              "projectPath": "F:\\Code\\GitHub\\HttpServer\\common\\DataStruct\\DataStruct.csproj"
+            },
             "F:\\Code\\GitHub\\HttpServer\\common\\FileHelper\\Helper.csproj": {
               "projectPath": "F:\\Code\\GitHub\\HttpServer\\common\\FileHelper\\Helper.csproj"
             }

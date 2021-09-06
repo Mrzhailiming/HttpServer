@@ -1,5 +1,5 @@
-﻿using Helper;
-using SocketServer.Data;
+﻿using DataStruct;
+using Helper;
 using System;
 using System.IO;
 using System.Text;
@@ -30,7 +30,7 @@ namespace SocketServer
             using (FileStream fileStream = FileHelper.CreateFileStream(filepath, fileNmae))
             {
                 BinaryWriter binaryWriter = new BinaryWriter(fileStream);
-                binaryWriter.Write(buff, 4, buff.Length - 4);
+                binaryWriter.Write(buff, 4 + 4 + fileNameLength, buff.Length - 4 - 4 - fileNameLength);
                 binaryWriter.Flush();
                 binaryWriter.Close();
                 binaryWriter.Dispose();
