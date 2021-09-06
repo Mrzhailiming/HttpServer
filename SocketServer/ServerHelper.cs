@@ -191,7 +191,7 @@ namespace SocketServer
 
                 byte[] cmd = new byte[e.BytesTransferred];
 
-                Buffer.BlockCopy(e.Buffer, 0, cmd, 0, e.BytesTransferred);
+                Buffer.BlockCopy(e.Buffer, e.Offset, cmd, 0, e.BytesTransferred);
 
                 ProcessCmd(cmd);
 
@@ -260,15 +260,8 @@ namespace SocketServer
         {
             try
             {
-                string ret = cmd[0].ToString();
-                //string msg = Encoding.UTF8.GetString(cmd);
-                string filepath = string.Format(@"{0}\Socket", Environment.CurrentDirectory);
-                using (FileStream fileStream = CreateFileStream(filepath, "test.jpg"))
-                {
-                    fileStream.Write(cmd, 0, cmd.Length);
-                    fileStream.Flush();
-                    fileStream.Close();
-                }
+                CMDDispatcher.Instance().Dispatcher(cmd);
+                
             }
             catch (Exception ex)
             {
@@ -276,33 +269,6 @@ namespace SocketServer
             }
         }
 
-        /// <summary>
-        /// 创建文件流
-        /// </summary>
-        /// <param name="filepath"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        private static FileStream CreateFileStream(string filepath, string name)
-        {
-            FileStream ret = null;
-            try
-            {
-                if (!Directory.Exists(filepath))
-                {
-                    Directory.CreateDirectory(filepath);
-                }
-                string fileFullPath = $"{filepath}\\{name}";
-                if (File.Exists(fileFullPath))
-                {
-                    fileFullPath = $"{filepath}\\new_{DateTime.Now.Ticks}_{name}";
-                }
-                ret = new FileStream(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Log(LogType.Exception, ex.ToString());
-            }
-            return ret;
-        }
+        
     }
 }

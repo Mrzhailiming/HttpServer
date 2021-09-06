@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace server
+namespace Helper
 {
     public enum LogType
     {
         Exception,
         PostNoBody,
-        Error_FileNameNULL
+        Error_FileNameNULL,
+        Error_BuffFull,
+        Error_CMDRepeat,
+        Error_CMDIsNull,
+        Msg_ProcessCmd,
+        Exception_ProcessCmd
     }
     public class LogHelper
     {

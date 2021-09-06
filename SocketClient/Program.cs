@@ -11,11 +11,9 @@ namespace SocketClient
             ClientHelper client = new ClientHelper(iPEndPoint, 1024 * 1024);
 
             while (true)
-            {
-                if (Console.ReadLine() == "s")
-                {
-                    client.Send("SendSuccess");
-                }
+            { 
+                string fileFullPath = Console.ReadLine();
+                client.Send(fileFullPath);
             }
 
         }

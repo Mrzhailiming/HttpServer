@@ -10,7 +10,6 @@ F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\SocketServer.runtim
 F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\SocketServer.runtimeconfig.dev.json
 F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\SocketServer.dll
 F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\SocketServer.pdb
-F:\Code\GitHub\HttpServer\SocketServer\obj\Debug\netcoreapp3.1\SocketServer.csproj.AssemblyReference.cache
 F:\Code\GitHub\HttpServer\SocketServer\obj\Debug\netcoreapp3.1\SocketServer.GeneratedMSBuildEditorConfig.editorconfig
 F:\Code\GitHub\HttpServer\SocketServer\obj\Debug\netcoreapp3.1\SocketServer.AssemblyInfoInputs.cache
 F:\Code\GitHub\HttpServer\SocketServer\obj\Debug\netcoreapp3.1\SocketServer.AssemblyInfo.cs

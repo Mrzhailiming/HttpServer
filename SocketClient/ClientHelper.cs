@@ -1,12 +1,29 @@
-﻿using System;
+﻿using Helper;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace SocketClient
 {
+    public class CMD_DS
+    {
+        public CMDHeader _header = new CMDHeader();
+
+        public CMDBody _body = new CMDBody();
+    }
+    public class CMDHeader
+    {
+        public int CMD_ID { get; set; }//4b
+    }
+
+    public class CMDBody
+    {
+        public byte[] buffer = null;//
+    }
     class AsyncUserToken
     {
         public Socket Socket;
@@ -16,43 +33,66 @@ namespace SocketClient
         Socket _socket = null;
         SocketAsyncEventArgs _SocketAsyncEventArgs = null;
         byte[] _buff = null;
+        IPEndPoint _IPEndPoint = null;
         ClientHelper() { }
         public ClientHelper(IPEndPoint iPEndPoint, int buffSize) 
         {
             try
             {
-                Init(buffSize);
-
-                _socket = new Socket(iPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                _socket.Connect(iPEndPoint.Address, iPEndPoint.Port);
-
-                _SocketAsyncEventArgs.SetBuffer(_buff, 0, buffSize);
-                _SocketAsyncEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-                _SocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = _socket };
+                Init(iPEndPoint, buffSize);
+                Connect();
             }
             catch (Exception ex)
             {
                 LogHelper.Log(LogType.Exception, ex.ToString());
             }
+            finally
+            {
+                Thread.Sleep(1000);
+                Reconnect();
+            }
         }
+        
+        private void Connect()
+        {
+            
+            _socket.Connect(_IPEndPoint.Address, _IPEndPoint.Port);
 
-        private void Init(int buffSize)
+            _SocketAsyncEventArgs.SetBuffer(_buff, 0, _buff.Length);
+            _SocketAsyncEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
+            _SocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = _socket };
+        }
+        private void Init(IPEndPoint iPEndPoint, int buffSize)
         {
             _SocketAsyncEventArgs = new SocketAsyncEventArgs();
             _buff = new byte[buffSize];
-        }
-        public void Send(string msg)
-        {
-            //byte[] sendBuf = System.Text.Encoding.UTF8.GetBytes(msg);
 
-            string imgPath = string.Format(@"{0}\root\test.jpg", Environment.CurrentDirectory);
+            _IPEndPoint = iPEndPoint;
+            _socket = new Socket(iPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        }
+        public void Send(string fileFullPath)
+        {
             byte[] sendBuf;
 
-            using (FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+            //CMD_DS cMD_DS = new CMD_DS();
+            //cMD_DS._header.CMD_ID = 0;
+            //cMD_DS._body.buffer = new byte[0];
+
+            using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
-                sendBuf = new byte[fs.Length];
-                fs.Read(sendBuf, 0, sendBuf.Length);
-                fs.Close();
+                string fileName = GetFileName(fileFullPath);
+                byte[] fileBuf = Encoding.Default.GetBytes(fileName);
+                int fileNameLength = fileBuf.Length;
+
+                sendBuf = new byte[fs.Length + 4 + 4 + fileNameLength];//
+                SetCMD(sendBuf, 0);
+                SetFileNameLength(sendBuf, fileNameLength);
+                SetFileName(sendBuf, fileBuf);
+
+                BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
+                binaryReader.Read(sendBuf, 8 + fileNameLength, sendBuf.Length - 8 - fileNameLength);
+                binaryReader.Close();
+                binaryReader.Dispose();
             }
 
             Buffer.BlockCopy(sendBuf, 0, _buff, 0, sendBuf.Length);
@@ -122,5 +162,53 @@ namespace SocketClient
                 //CloseClientSocket(e);
             }
         }
+        private void Release()
+        {
+            if (null != _socket)
+            {
+                _socket.Dispose();
+            }
+        }
+        private void Reconnect()
+        {
+            Release();
+            Init(_IPEndPoint, _buff.Length);
+        }
+
+        /// <summary>
+        /// 获取文件名
+        /// </summary>
+        /// <param name="fileFullPath"></param>
+        /// <returns></returns>
+        string GetFileName(string fileFullPath)
+        {
+            int beginIndex = fileFullPath.LastIndexOf('\\');
+            return fileFullPath.Substring(beginIndex + 1);
+        }
+
+        /// <summary>
+        /// 设置cmd
+        /// </summary>
+        static void SetCMD(byte[] sendBuf, int cmdID)
+        {
+            byte[] src = BitConverter.GetBytes(cmdID);
+            Array.Copy(src, 0, sendBuf, 0, 4);
+        }
+        /// <summary>
+        /// 设置文件名的长度
+        /// </summary>
+        static void SetFileNameLength(byte[] sendBuf, int fileNameLength)
+        {
+            byte[] src = BitConverter.GetBytes(fileNameLength);
+            Array.Copy(src, 0, sendBuf, 4, 4);
+        }
+        /// <summary>
+        /// 设置文件名
+        /// </summary>
+        static void SetFileName(byte[] sendBuf, byte[] fileNameBuf)
+        {
+            Array.Copy(fileNameBuf, 0, sendBuf, 8, fileNameBuf.Length);
+        }
+       
     }
 }

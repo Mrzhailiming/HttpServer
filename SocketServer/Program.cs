@@ -7,6 +7,9 @@ namespace SocketServer
     {
         static void Main(string[] args)
         {
+            CMDImageManager imageManager = new CMDImageManager();
+
+
             int numConnections = 100;
             int receiveBufferSize = 1024 * 1024;
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
