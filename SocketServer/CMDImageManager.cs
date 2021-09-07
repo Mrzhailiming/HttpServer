@@ -15,16 +15,16 @@ namespace SocketServer
 
         void Init()
         {
-            CMDDispatcher.Instance().RegisterCMD(TCPCMDS.IMAGE, MyAction);
+            CMDDispatcher.Instance().RegisterCMD(TCPCMDS.UPLOAD, MyAction);
         }
 
         void MyAction(TCPTask task)
         {
             byte[] buff = task.buffer;
 
-            int cmdID = GetCmdID(buff);
-            int fileNameLength = GetFileNameLength(buff);
-            string fileNmae = GetFileName(buff, fileNameLength);
+            int cmdID = CMDHelper.GetCmdID(buff);
+            int fileNameLength = CMDHelper.GetCmdFileNameLength(buff);
+            string fileNmae = CMDHelper.GetCmdFileName(buff, fileNameLength);
 
             string filepath = string.Format(@"{0}\Socket", Environment.CurrentDirectory);
             using (FileStream fileStream = FileHelper.CreateFileStream(filepath, fileNmae))
@@ -35,26 +35,6 @@ namespace SocketServer
                 binaryWriter.Close();
                 binaryWriter.Dispose();
             }
-        }
-        
-
-        public int GetCmdID(byte[] buff)
-        {
-            byte[] destBuf = new byte[4];
-            Array.Copy(buff, Offset.cmdIDOffset, destBuf, 0, 4);
-            return BitConverter.ToInt32(destBuf, 0);
-        }
-        public int GetFileNameLength(byte[] buff)
-        {
-            byte[] destBuf = new byte[4];
-            Array.Copy(buff, Offset.fileNameLengthOffset, destBuf, 0, 4);
-            return BitConverter.ToInt32(destBuf, 0);
-        }
-        public string GetFileName(byte[] buff, int fileNameLength)
-        {
-            byte[] destBuf = new byte[fileNameLength];
-            Array.Copy(buff, Offset.fileNameOffset, destBuf, 0, fileNameLength);
-            return Encoding.Default.GetString(destBuf);
         }
     }
 }

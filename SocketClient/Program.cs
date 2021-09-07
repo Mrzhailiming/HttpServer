@@ -15,8 +15,21 @@ namespace SocketClient
             {
                 try
                 {
-                    string fileFullPath = Console.ReadLine();
-                    client.Send(fileFullPath);
+                    string ch = Console.ReadLine();
+                    if("s" == ch.ToLower())
+                    {
+                        string fileFullPath = Console.ReadLine();
+                        client.Send(fileFullPath);
+                    }
+                    else if("g" == ch.ToLower())
+                    {
+                        string fileFullPath = Console.ReadLine();
+                        client.Get(fileFullPath);
+                    }
+                    else
+                    {
+                        LogHelper.Log(LogType.SUCCESS, "chose s or g");
+                    }
                 }
                 catch (Exception ex)
                 {

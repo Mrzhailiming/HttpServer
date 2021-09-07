@@ -46,8 +46,10 @@ namespace SocketClient
             _socket.Connect(_IPEndPoint.Address, _IPEndPoint.Port);
 
             _SocketAsyncEventArgs.SetBuffer(_buff, 0, _buff.Length);
-            _SocketAsyncEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-            _SocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = _socket, socketBuffLength = _buff.Length, AsyncEventArgs = _SocketAsyncEventArgs };
+            _SocketAsyncEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(Socket_IOHelper.IO_Completed);
+            _SocketAsyncEventArgs.UserToken = new AsyncUserToken(_buff.Length, _SocketAsyncEventArgs, _socket);
+
+            ((AsyncUserToken)_SocketAsyncEventArgs.UserToken).asyncUserTokenRecv.ReceiveAsync();//绑定好久接收
         }
         private void Init(IPEndPoint iPEndPoint, int buffSize)
         {
@@ -70,7 +72,7 @@ namespace SocketClient
                 byte[] fileBuf = Encoding.Default.GetBytes(fileName);
                 int fileNameLength = fileBuf.Length;
 
-                sendBuf = cMD_DS.GetSendBuff(0, fileName, (int)fs.Length);
+                sendBuf = cMD_DS.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, (int)fs.Length);
 
                 BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
                 int sendOffset = Offset.sendOffset;//命令头的偏移
@@ -79,93 +81,31 @@ namespace SocketClient
                 binaryReader.Dispose();
             }
 
+            BeginSend(sendBuf);
+        }
+
+        public void Get(string fileFullPath)
+        {
+            byte[] sendBuf;
+            CMD_DS cMD_DS = new CMD_DS();
+
+            string fileName = FileHelper.GetFileName(fileFullPath);
+            sendBuf = cMD_DS.GetSendBuff((int)TCPCMDS.DOWNLOAD, fileName, 0);
+            BeginSend(sendBuf);
+        }
+
+        void BeginSend(byte[] sendBuf)
+        {
             AsyncUserToken token = (AsyncUserToken)_SocketAsyncEventArgs.UserToken;
-            token.SetTotalSendBuff(sendBuf);
-            token.SetBuffer(sendBuf.Length);
-            bool willRaiseEvent  = token.SendAsync();
+            token.asyncUserTokenSend.SetTotalSendBuff(sendBuf);
+            token.asyncUserTokenSend.SetBuffer(sendBuf.Length);
+            bool willRaiseEvent = token.asyncUserTokenSend.SendAsync();
             if (!willRaiseEvent)
             {
-                ProcessSend(_SocketAsyncEventArgs);
-            }
-        }
-        void IO_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            // determine which type of operation just completed and call the associated handler
-            switch (e.LastOperation)
-            {
-                case SocketAsyncOperation.Receive:
-                    ProcessReceive(e);
-                    break;
-                case SocketAsyncOperation.Send:
-                    ProcessSend(e);
-                    break;
-                default:
-                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
+                Socket_IOHelper.ProcessSend(_SocketAsyncEventArgs);
             }
         }
 
-        private void ProcessReceive(SocketAsyncEventArgs e)
-        {
-            AsyncUserToken token = (AsyncUserToken)e.UserToken;
-            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
-            {
-                //先不处理服务器回的
-                //e.SetBuffer(e.Offset, e.BytesTransferred);
-                //bool willRaiseEvent = token.Socket.SendAsync(e);
-                //if (!willRaiseEvent)
-                //{
-                //    ProcessSend(e);
-                //}
-            }
-            else
-            {
-                //CloseClientSocket(e);
-                LogHelper.Log(LogType.Error_ConnectionReset, "");
-                ReConnect();
-            }
-        }
-
-        // This method is invoked when an asynchronous send operation completes.
-        // The method issues another receive on the socket to read any additional
-        // data sent from the client
-        //
-        // <param name="e"></param>
-        private void ProcessSend(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                // done echoing data back to the client
-                AsyncUserToken token = (AsyncUserToken)e.UserToken;
-
-                if (!token.IsSendComplete())//没发送完
-                {
-                    token.SetBuffer(token.needSendNum - token.hadSendNum);
-                    bool send = token.SendAsync();
-                    if (!send)
-                    {
-                        ProcessSend(e);//继续发送
-                    }
-                }
-                else//发送完毕，开始接收？？合理吗，该是异步的
-                {
-                    //// read the next block of data send from the client
-                    //bool willRaiseEvent = token.Socket.ReceiveAsync(e);
-                    //if (!willRaiseEvent)
-                    //{
-                    //    ProcessReceive(e);
-                    //}
-                    token.Reset();
-                    LogHelper.Log(LogType.SUCCESS, "");
-                }
-                
-            }
-            else
-            {
-                //CloseClientSocket(e);
-                LogHelper.Log(LogType.Error_ConnectionReset, "");
-                ReConnect();
-            }
-        }
         private void Release()
         {
             if (null != _socket)
@@ -178,31 +118,5 @@ namespace SocketClient
             Release();
             Init(_IPEndPoint, _buff.Length);
         }
-
-
-        /// <summary>
-        /// 设置cmd
-        /// </summary>
-        static void SetCMD(byte[] sendBuf, int cmdID)
-        {
-            byte[] src = BitConverter.GetBytes(cmdID);
-            Array.Copy(src, 0, sendBuf, 0, 4);
-        }
-        /// <summary>
-        /// 设置文件名的长度
-        /// </summary>
-        static void SetFileNameLength(byte[] sendBuf, int fileNameLength)
-        {
-            byte[] src = BitConverter.GetBytes(fileNameLength);
-            Array.Copy(src, 0, sendBuf, 4, 4);
-        }
-        /// <summary>
-        /// 设置文件名
-        /// </summary>
-        static void SetFileName(byte[] sendBuf, byte[] fileNameBuf)
-        {
-            Array.Copy(fileNameBuf, 0, sendBuf, 8, fileNameBuf.Length);
-        }
-       
     }
 }

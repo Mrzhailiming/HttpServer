@@ -26,12 +26,7 @@ namespace SocketServer
         Semaphore m_maxNumberAcceptedClients;
 
         ServerManager() { }
-        // Create an uninitialized server instance.
-        // To start the server listening for connection requests
-        // call the Init method followed by Start method
-        //
-        // <param name="numConnections">the maximum number of connections the sample is designed to handle simultaneously</param>
-        // <param name="receiveBufferSize">buffer size to use for each socket I/O operation</param>
+
         public ServerManager(int numConnections, int receiveBufferSize)
         {
             m_totalBytesRead = 0;
@@ -47,11 +42,6 @@ namespace SocketServer
             m_maxNumberAcceptedClients = new Semaphore(numConnections, numConnections);
         }
 
-        // Initializes the server by preallocating reusable buffers and
-        // context objects.  These objects do not need to be preallocated
-        // or reused, but it is done this way to illustrate how the API can
-        // easily be used to create reusable objects to increase server performance.
-        //
         public void Init()
         {
             // Allocates one large byte buffer which all I/O operations use a piece of.  This gaurds
@@ -65,8 +55,8 @@ namespace SocketServer
             {
                 //Pre-allocate a set of reusable SocketAsyncEventArgs
                 readWriteEventArg = new SocketAsyncEventArgs();
-                readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-                readWriteEventArg.UserToken = new AsyncUserTokenRecv() { AsyncEventArgs = readWriteEventArg, socketBuffLength = m_receiveBufferSize * 2 };
+                readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(Socket_IOHelper.IO_Completed);
+                readWriteEventArg.UserToken = new AsyncUserToken(m_receiveBufferSize * 2, readWriteEventArg);
 
                 // assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
                 m_bufferManager.SetBuffer(readWriteEventArg);
@@ -76,11 +66,6 @@ namespace SocketServer
             }
         }
 
-        // Starts the server such that it is listening for
-        // incoming connection requests.
-        //
-        // <param name="localEndPoint">The endpoint which the server will listening
-        // for connection requests on</param>
         public void Start(IPEndPoint localEndPoint)
         {
             // create the socket which listens for incoming connections
@@ -97,10 +82,6 @@ namespace SocketServer
             Console.ReadKey();
         }
 
-        // Begins an operation to accept a connection request from the client
-        //
-        // <param name="acceptEventArg">The context object to use when issuing
-        // the accept operation on the server's listening socket</param>
         public void StartAccept(SocketAsyncEventArgs acceptEventArg)
         {
             if (acceptEventArg == null)
@@ -122,9 +103,6 @@ namespace SocketServer
             }
         }
 
-        // This method is the callback method associated with Socket.AcceptAsync
-        // operations and is invoked when an accept operation is complete
-        //
         void AcceptEventArg_Completed(object sender, SocketAsyncEventArgs e)
         {
             ProcessAccept(e);
@@ -140,114 +118,107 @@ namespace SocketServer
             //ReadEventArg object user token
             SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
 
-            AsyncUserTokenRecv token = (AsyncUserTokenRecv)readEventArgs.UserToken;
+            AsyncUserToken token = (AsyncUserToken)readEventArgs.UserToken;
             token.Socket = e.AcceptSocket;
 
-            bool willRaiseEvent = token.ReceiveAsync();
+            bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();//接收连接后的第一件事就是receive
             if (!willRaiseEvent)
             {
-                ProcessReceive(readEventArgs);
+                Socket_IOHelper.ProcessReceive(readEventArgs);
             }
 
-            //// As soon as the client is connected, post a receive to the connection
-            //bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
-            //if (!willRaiseEvent)
-            //{
-            //    ProcessReceive(readEventArgs);
-            //}
-
-            // Accept the next connection request
+            //Accept下一个连接请求
             StartAccept(e);
         }
 
-        // This method is called whenever a receive or send operation is completed on a socket
+        //// This method is called whenever a receive or send operation is completed on a socket
+        ////
+        //// <param name="e">SocketAsyncEventArg associated with the completed receive operation</param>
+        //void IO_Completed(object sender, SocketAsyncEventArgs e)
+        //{
+        //    // determine which type of operation just completed and call the associated handler
+        //    switch (e.LastOperation)
+        //    {
+        //        case SocketAsyncOperation.Receive:
+        //            ProcessReceive(e);
+        //            break;
+        //        case SocketAsyncOperation.Send:
+        //            ProcessSend(e);
+        //            break;
+        //        default:
+        //            throw new ArgumentException("The last operation completed on the socket was not a receive or send");
+        //    }
+        //}
         //
-        // <param name="e">SocketAsyncEventArg associated with the completed receive operation</param>
-        void IO_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            // determine which type of operation just completed and call the associated handler
-            switch (e.LastOperation)
-            {
-                case SocketAsyncOperation.Receive:
-                    ProcessReceive(e);
-                    break;
-                case SocketAsyncOperation.Send:
-                    ProcessSend(e);
-                    break;
-                default:
-                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
-            }
-        }
+        //// This method is invoked when an asynchronous receive operation completes.
+        //// If the remote host closed the connection, then the socket is closed.
+        //// If data was received then the data is echoed back to the client.
+        ////
+        //private void ProcessReceive(SocketAsyncEventArgs e)
+        //{
+        //    // check if the remote host closed the connection
+        //    AsyncUserTokenRecv token = (AsyncUserTokenRecv)e.UserToken;
+        //    if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
+        //    {
+        //        //increment the count of the total bytes receive by the server
+        //        Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
+        //        Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
 
-        // This method is invoked when an asynchronous receive operation completes.
-        // If the remote host closed the connection, then the socket is closed.
-        // If data was received then the data is echoed back to the client.
-        //
-        private void ProcessReceive(SocketAsyncEventArgs e)
-        {
-            // check if the remote host closed the connection
-            AsyncUserTokenRecv token = (AsyncUserTokenRecv)e.UserToken;
-            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
-            {
-                //increment the count of the total bytes receive by the server
-                Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
-                Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
-
-                token.BuffCopy();
-                if (!token.Check())
-                {
-                    bool willRaiseEvent = token.ReceiveAsync();
-                    if (!willRaiseEvent)
-                    {
-                        ProcessReceive(e);
-                    }
-                }
-                else
-                {
-                    TCPTask task = new TCPTask(token.Socket, token.recvBuff);
-                    ProcessCmd(task);
-                    token.Reset();
-                    token.ReceiveAsync();//继续接收
-                }
+        //        token.BuffCopy();
+        //        if (!token.Check())
+        //        {
+        //            bool willRaiseEvent = token.ReceiveAsync();
+        //            if (!willRaiseEvent)
+        //            {
+        //                ProcessReceive(e);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            TCPTask task = new TCPTask(token.Socket, token.recvBuff);
+        //            ProcessCmd(task);
+        //            token.Reset();
+        //            token.ReceiveAsync();//继续接收
+        //        }
                 
 
-                ////echo the data received back to the client
-                //e.SetBuffer(e.Offset, e.BytesTransferred);
-                //bool willRaiseEvent = token.Socket.SendAsync(e);
-                //if (!willRaiseEvent)
-                //{
-                //    ProcessSend(e);
-                //}
-            }
-            else
-            {
-                CloseClientSocket(e);
-            }
-        }
+        //        ////echo the data received back to the client
+        //        //e.SetBuffer(e.Offset, e.BytesTransferred);
+        //        //bool willRaiseEvent = token.Socket.SendAsync(e);
+        //        //if (!willRaiseEvent)
+        //        //{
+        //        //    ProcessSend(e);
+        //        //}
+        //    }
+        //    else
+        //    {
+        //        CloseClientSocket(e);
+        //    }
+        //}
 
-        // This method is invoked when an asynchronous send operation completes.
-        // The method issues another receive on the socket to read any additional
-        // data sent from the client
-        //
-        // <param name="e"></param>
-        private void ProcessSend(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                // done echoing data back to the client
-                AsyncUserToken token = (AsyncUserToken)e.UserToken;
-                // read the next block of data send from the client
-                bool willRaiseEvent = token.Socket.ReceiveAsync(e);
-                if (!willRaiseEvent)
-                {
-                    ProcessReceive(e);
-                }
-            }
-            else
-            {
-                CloseClientSocket(e);
-            }
-        }
+        //// This method is invoked when an asynchronous send operation completes.
+        //// The method issues another receive on the socket to read any additional
+        //// data sent from the client
+        ////
+        //// <param name="e"></param>
+        //private void ProcessSend(SocketAsyncEventArgs e)
+        //{
+        //    if (e.SocketError == SocketError.Success)
+        //    {
+        //        // done echoing data back to the client
+        //        AsyncUserToken token = (AsyncUserToken)e.UserToken;
+        //        // read the next block of data send from the client
+        //        bool willRaiseEvent = token.Socket.ReceiveAsync(e);
+        //        if (!willRaiseEvent)
+        //        {
+        //            ProcessReceive(e);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        CloseClientSocket(e);
+        //    }
+        //}
 
         private void CloseClientSocket(SocketAsyncEventArgs e)
         {

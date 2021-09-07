@@ -10,6 +10,9 @@ namespace DataStruct
         public const int cmdLengthOffset = 4;
         public const int fileNameLengthOffset = 8;
         public const int fileNameOffset = 12;
+        /// <summary>
+        /// 文件名的偏移
+        /// </summary>
         public const int sendOffset = 12;
     }
     public class CMD_DS

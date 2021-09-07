@@ -6,6 +6,7 @@ namespace DataStruct
 {
     public enum TCPCMDS
     {
-        IMAGE,
+        UPLOAD,
+        DOWNLOAD,
     }
 }

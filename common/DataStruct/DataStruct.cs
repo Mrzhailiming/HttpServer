@@ -5,6 +5,32 @@ namespace DataStruct
 {
     public class AsyncUserToken
     {
+        public Socket Socket = null;
+        int socketBuffLength = 0;
+        SocketAsyncEventArgs AsyncEventArgs = null;
+        public AsyncUserTokenSend asyncUserTokenSend = null;
+        public AsyncUserTokenRecv asyncUserTokenRecv = null;
+        AsyncUserToken() { }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socketBuffLen"></param>
+        /// <param name="asyncEventArgs"></param>
+        /// <param name="socket">监听不设置，connect的时候要设置</param>
+        public AsyncUserToken(int socketBuffLen, SocketAsyncEventArgs asyncEventArgs, Socket socket = null) 
+        {
+            Socket = socket;
+            socketBuffLength = socketBuffLen;
+            AsyncEventArgs = asyncEventArgs;
+            asyncUserTokenSend = new AsyncUserTokenSend(socket, socketBuffLen, asyncEventArgs);
+            asyncUserTokenRecv = new AsyncUserTokenRecv(socketBuffLen, asyncEventArgs);
+        }
+
+    }
+
+
+    public class AsyncUserTokenSend
+    {
         //new的时候赋值
         public Socket Socket;
         public int socketBuffLength = 0;
@@ -18,6 +44,13 @@ namespace DataStruct
         //
         public bool isCompleteSend = false;
 
+        AsyncUserTokenSend() { }
+        public AsyncUserTokenSend(Socket socket, int socketBuffLen, SocketAsyncEventArgs asyncEventArgs)
+        {
+            Socket = socket;
+            socketBuffLength = socketBuffLen;
+            AsyncEventArgs = asyncEventArgs;
+        }
         /// <summary>
         /// 设置总共需要发送的buffer
         /// </summary>
@@ -87,7 +120,12 @@ namespace DataStruct
 
         //
         public bool isRecvComplete = false;
-
+        AsyncUserTokenRecv() { }
+        public AsyncUserTokenRecv(int socketBuffLen, SocketAsyncEventArgs asyncEventArgs)
+        {
+            socketBuffLength = socketBuffLen;
+            AsyncEventArgs = asyncEventArgs;
+        }
         /// <summary>
         /// 调用Socket.ReceiveAsync
         /// </summary>
@@ -155,12 +193,14 @@ namespace DataStruct
     {
         public Socket clientSocket;
         public byte[] buffer;
+        public SocketAsyncEventArgs socketAsyncEventArgs;
         TCPTask() { }
 
-        public TCPTask(Socket socket, byte[] buf)
+        public TCPTask(Socket socket, byte[] buf, SocketAsyncEventArgs AsyncEventArgs)
         {
             clientSocket = socket;
             buffer = buf;
+            socketAsyncEventArgs = AsyncEventArgs;
         }
     }
 }

@@ -8,7 +8,7 @@ namespace SocketServer
         static void Main(string[] args)
         {
             CMDImageManager imageManager = new CMDImageManager();
-
+            DownloadFilemanager downloadFilemanager = new DownloadFilemanager();
 
             int numConnections = 100;
             int receiveBufferSize = 1024 * 1024;

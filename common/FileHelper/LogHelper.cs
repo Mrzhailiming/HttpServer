@@ -15,7 +15,9 @@ namespace Helper
         Error_CMDIsNull,
         Error_ConnectionReset,
         Msg_ProcessCmd,
-        Exception_ProcessCmd
+        Exception_ProcessCmd,
+
+        Error_ProcessSend,
     }
     public class LogHelper
     {
