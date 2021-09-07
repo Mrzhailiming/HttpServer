@@ -66,7 +66,7 @@ namespace SocketServer
                 //Pre-allocate a set of reusable SocketAsyncEventArgs
                 readWriteEventArg = new SocketAsyncEventArgs();
                 readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-                readWriteEventArg.UserToken = new AsyncUserToken();
+                readWriteEventArg.UserToken = new AsyncUserTokenRecv() { AsyncEventArgs = readWriteEventArg, socketBuffLength = m_receiveBufferSize * 2 };
 
                 // assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
                 m_bufferManager.SetBuffer(readWriteEventArg);
@@ -140,14 +140,21 @@ namespace SocketServer
             //ReadEventArg object user token
             SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
 
-            ((AsyncUserToken)readEventArgs.UserToken).Socket = e.AcceptSocket;
+            AsyncUserTokenRecv token = (AsyncUserTokenRecv)readEventArgs.UserToken;
+            token.Socket = e.AcceptSocket;
 
-            // As soon as the client is connected, post a receive to the connection
-            bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
+            bool willRaiseEvent = token.ReceiveAsync();
             if (!willRaiseEvent)
             {
                 ProcessReceive(readEventArgs);
             }
+
+            //// As soon as the client is connected, post a receive to the connection
+            //bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
+            //if (!willRaiseEvent)
+            //{
+            //    ProcessReceive(readEventArgs);
+            //}
 
             // Accept the next connection request
             StartAccept(e);
@@ -179,26 +186,36 @@ namespace SocketServer
         private void ProcessReceive(SocketAsyncEventArgs e)
         {
             // check if the remote host closed the connection
-            AsyncUserToken token = (AsyncUserToken)e.UserToken;
+            AsyncUserTokenRecv token = (AsyncUserTokenRecv)e.UserToken;
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
                 //increment the count of the total bytes receive by the server
                 Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
                 Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
 
-                byte[] cmd = new byte[e.BytesTransferred];
-
-                Buffer.BlockCopy(e.Buffer, e.Offset, cmd, 0, e.BytesTransferred);
-
-                ProcessCmd(cmd);
-
-                //echo the data received back to the client
-                e.SetBuffer(e.Offset, e.BytesTransferred);
-                bool willRaiseEvent = token.Socket.SendAsync(e);
-                if (!willRaiseEvent)
+                token.BuffCopy();
+                if (!token.Check())
                 {
-                    ProcessSend(e);
+                    bool willRaiseEvent = token.ReceiveAsync();
+                    if (!willRaiseEvent)
+                    {
+                        ProcessReceive(e);
+                    }
                 }
+                else
+                {
+                    ProcessCmd(token.recvBuff);
+                    token.Reset();
+                }
+                
+
+                ////echo the data received back to the client
+                //e.SetBuffer(e.Offset, e.BytesTransferred);
+                //bool willRaiseEvent = token.Socket.SendAsync(e);
+                //if (!willRaiseEvent)
+                //{
+                //    ProcessSend(e);
+                //}
             }
             else
             {
@@ -232,7 +249,7 @@ namespace SocketServer
 
         private void CloseClientSocket(SocketAsyncEventArgs e)
         {
-            AsyncUserToken token = e.UserToken as AsyncUserToken;
+            AsyncUserTokenRecv token = e.UserToken as AsyncUserTokenRecv;
 
             // close the socket associated with the client
             try

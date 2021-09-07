@@ -30,7 +30,7 @@ namespace SocketServer
             using (FileStream fileStream = FileHelper.CreateFileStream(filepath, fileNmae))
             {
                 BinaryWriter binaryWriter = new BinaryWriter(fileStream);
-                binaryWriter.Write(buff, 4 + 4 + fileNameLength, buff.Length - 4 - 4 - fileNameLength);
+                binaryWriter.Write(buff, 4 + 4 + 4 + fileNameLength, buff.Length - 4 - 4 - 4 - fileNameLength);
                 binaryWriter.Flush();
                 binaryWriter.Close();
                 binaryWriter.Dispose();
@@ -41,19 +41,19 @@ namespace SocketServer
         public int GetCmdID(byte[] buff)
         {
             byte[] destBuf = new byte[4];
-            Array.Copy(buff, 0, destBuf, 0, 4);
+            Array.Copy(buff, Offset.cmdIDOffset, destBuf, 0, 4);
             return BitConverter.ToInt32(destBuf, 0);
         }
         public int GetFileNameLength(byte[] buff)
         {
             byte[] destBuf = new byte[4];
-            Array.Copy(buff, 4, destBuf, 0, 4);
+            Array.Copy(buff, Offset.fileNameLengthOffset, destBuf, 0, 4);
             return BitConverter.ToInt32(destBuf, 0);
         }
         public string GetFileName(byte[] buff, int fileNameLength)
         {
             byte[] destBuf = new byte[fileNameLength];
-            Array.Copy(buff, 8, destBuf, 0, fileNameLength);
+            Array.Copy(buff, Offset.fileNameOffset, destBuf, 0, fileNameLength);
             return Encoding.Default.GetString(destBuf);
         }
     }

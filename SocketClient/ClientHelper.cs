@@ -10,25 +10,6 @@ using System.Threading;
 
 namespace SocketClient
 {
-    //public class CMD_DS
-    //{
-    //    public CMDHeader _header = new CMDHeader();
-
-    //    public CMDBody _body = new CMDBody();
-    //}
-    //public class CMDHeader
-    //{
-    //    public int CMD_ID { get; set; }//4b
-    //}
-
-    //public class CMDBody
-    //{
-    //    public byte[] buffer = null;//
-    //}
-    class AsyncUserToken
-    {
-        public Socket Socket;
-    }
     class ClientHelper
     {
         Socket _socket = null;
@@ -58,7 +39,7 @@ namespace SocketClient
 
             _SocketAsyncEventArgs.SetBuffer(_buff, 0, _buff.Length);
             _SocketAsyncEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-            _SocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = _socket };
+            _SocketAsyncEventArgs.UserToken = new AsyncUserToken() { Socket = _socket, socketBuffLength = _buff.Length, AsyncEventArgs = _SocketAsyncEventArgs };
         }
         private void Init(IPEndPoint iPEndPoint, int buffSize)
         {
@@ -89,19 +70,29 @@ namespace SocketClient
                 sendBuf = cMD_DS.GetSendBuff(0, fileName, (int)fs.Length);
 
                 BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
-                binaryReader.Read(sendBuf, 8 + fileNameLength, sendBuf.Length - 8 - fileNameLength);
+                int sendOffset = Offset.fileNameOffset;
+                binaryReader.Read(sendBuf, sendOffset + fileNameLength, sendBuf.Length - sendOffset - fileNameLength);
                 binaryReader.Close();
                 binaryReader.Dispose();
             }
 
-            Buffer.BlockCopy(sendBuf, 0, _buff, 0, sendBuf.Length);
+            //Buffer.BlockCopy(sendBuf, 0, _buff, 0, sendBuf.Length);
 
-            _SocketAsyncEventArgs.SetBuffer(0, sendBuf.Length);
-            bool willRaiseEvent = _socket.SendAsync(_SocketAsyncEventArgs);
+            AsyncUserToken token = (AsyncUserToken)_SocketAsyncEventArgs.UserToken;
+            token.SetTotalSendBuff(sendBuf);
+            token.SetBuffer(sendBuf.Length);
+            bool willRaiseEvent  = token.SendAsync();
             if (!willRaiseEvent)
             {
                 ProcessSend(_SocketAsyncEventArgs);
             }
+
+            //_SocketAsyncEventArgs.SetBuffer(0, sendBuf.Length);
+            //bool willRaiseEvent = _socket.SendAsync(_SocketAsyncEventArgs);
+            //if (!willRaiseEvent)
+            //{
+            //    ProcessSend(_SocketAsyncEventArgs);
+            //}
         }
         void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -149,12 +140,26 @@ namespace SocketClient
             {
                 // done echoing data back to the client
                 AsyncUserToken token = (AsyncUserToken)e.UserToken;
-                // read the next block of data send from the client
-                bool willRaiseEvent = token.Socket.ReceiveAsync(e);
-                if (!willRaiseEvent)
+
+                if (!token.IsSendComplete())//没发送完
                 {
-                    ProcessReceive(e);
+                    token.SetBuffer(token.needSendNum - token.hadSendNum);
+                    bool send = token.SendAsync();
+                    if (!send)
+                    {
+                        ProcessSend(e);//继续发送
+                    }
                 }
+                else//发送完毕，开始接收？？合理吗，该是异步的
+                {
+                    //// read the next block of data send from the client
+                    //bool willRaiseEvent = token.Socket.ReceiveAsync(e);
+                    //if (!willRaiseEvent)
+                    //{
+                    //    ProcessReceive(e);
+                    //}
+                }
+                
             }
             else
             {
