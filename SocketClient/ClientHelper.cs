@@ -1,4 +1,5 @@
-﻿using Helper;
+﻿using DataStruct;
+using Helper;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,21 +10,21 @@ using System.Threading;
 
 namespace SocketClient
 {
-    public class CMD_DS
-    {
-        public CMDHeader _header = new CMDHeader();
+    //public class CMD_DS
+    //{
+    //    public CMDHeader _header = new CMDHeader();
 
-        public CMDBody _body = new CMDBody();
-    }
-    public class CMDHeader
-    {
-        public int CMD_ID { get; set; }//4b
-    }
+    //    public CMDBody _body = new CMDBody();
+    //}
+    //public class CMDHeader
+    //{
+    //    public int CMD_ID { get; set; }//4b
+    //}
 
-    public class CMDBody
-    {
-        public byte[] buffer = null;//
-    }
+    //public class CMDBody
+    //{
+    //    public byte[] buffer = null;//
+    //}
     class AsyncUserToken
     {
         public Socket Socket;
@@ -71,20 +72,21 @@ namespace SocketClient
         {
             byte[] sendBuf;
 
-            //CMD_DS cMD_DS = new CMD_DS();
-            //cMD_DS._header.CMD_ID = 0;
-            //cMD_DS._body.buffer = new byte[0];
+            CMD_DS cMD_DS = new CMD_DS();
 
             using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
-                string fileName = GetFileName(fileFullPath);
+                string fileName = FileHelper.GetFileName(fileFullPath);
+
                 byte[] fileBuf = Encoding.Default.GetBytes(fileName);
                 int fileNameLength = fileBuf.Length;
 
-                sendBuf = new byte[fs.Length + 4 + 4 + fileNameLength];//
-                SetCMD(sendBuf, 0);
-                SetFileNameLength(sendBuf, fileNameLength);
-                SetFileName(sendBuf, fileBuf);
+                //sendBuf = cMD_DS._body.buffer = new byte[fs.Length + 4 + 4 + fileNameLength];//
+                //SetCMD(sendBuf, 0);
+                //SetFileNameLength(sendBuf, fileNameLength);
+                //SetFileName(sendBuf, fileBuf);
+
+                sendBuf = cMD_DS.GetSendBuff(0, fileName, (int)fs.Length);
 
                 BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
                 binaryReader.Read(sendBuf, 8 + fileNameLength, sendBuf.Length - 8 - fileNameLength);
@@ -172,16 +174,6 @@ namespace SocketClient
             Init(_IPEndPoint, _buff.Length);
         }
 
-        /// <summary>
-        /// 获取文件名
-        /// </summary>
-        /// <param name="fileFullPath"></param>
-        /// <returns></returns>
-        string GetFileName(string fileFullPath)
-        {
-            int beginIndex = fileFullPath.LastIndexOf('\\');
-            return fileFullPath.Substring(beginIndex + 1);
-        }
 
         /// <summary>
         /// 设置cmd

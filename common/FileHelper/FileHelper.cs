@@ -6,6 +6,16 @@ namespace Helper
     public class FileHelper
     {
         /// <summary>
+        /// 获取文件名
+        /// </summary>
+        /// <param name="fileFullPath"></param>
+        /// <returns></returns>
+        public static string GetFileName(string fileFullPath)
+        {
+            int beginIndex = fileFullPath.LastIndexOf('\\');
+            return fileFullPath.Substring(beginIndex + 1);
+        }
+        /// <summary>
         /// 创建文件流
         /// </summary>
         /// <param name="filepath"></param>
