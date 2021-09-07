@@ -6,12 +6,14 @@ namespace Helper
 {
     public enum LogType
     {
+        SUCCESS,
         Exception,
         PostNoBody,
         Error_FileNameNULL,
         Error_BuffFull,
         Error_CMDRepeat,
         Error_CMDIsNull,
+        Error_ConnectionReset,
         Msg_ProcessCmd,
         Exception_ProcessCmd
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Helper;
+using System;
 using System.Net;
 
 namespace SocketClient
@@ -8,12 +9,19 @@ namespace SocketClient
         static void Main(string[] args)
         {
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
-            ClientHelper client = new ClientHelper(iPEndPoint, 1000 * 1000);
+            ClientHelper client = new ClientHelper(iPEndPoint, 1024 * 1024);
 
             while (true)
-            { 
-                string fileFullPath = Console.ReadLine();
-                client.Send(fileFullPath);
+            {
+                try
+                {
+                    string fileFullPath = Console.ReadLine();
+                    client.Send(fileFullPath);
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Log(LogType.Exception, ex.ToString());
+                }
             }
 
         }

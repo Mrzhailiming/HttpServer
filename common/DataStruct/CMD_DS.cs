@@ -10,6 +10,7 @@ namespace DataStruct
         public const int cmdLengthOffset = 4;
         public const int fileNameLengthOffset = 8;
         public const int fileNameOffset = 12;
+        public const int sendOffset = 12;
     }
     public class CMD_DS
     {
@@ -20,7 +21,7 @@ namespace DataStruct
         
 
         /// <summary>
-        /// 
+        /// 设置命令头
         /// </summary>
         /// <param name="cmd">CmdID</param>
         /// <param name="fileName">filename</param>
@@ -35,7 +36,7 @@ namespace DataStruct
 
             _header.cmdLength = fileLength + 4 + 4 + 4 + fileNameLength;//cmdID length fileNameLength body
 
-            _body.buffer = new byte[_header.cmdLength];//
+            _body.buffer = new byte[_header.cmdLength];//最大开1339031595字节 = 1.3G
 
             SetCMD();
             SetCMDLength();

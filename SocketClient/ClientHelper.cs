@@ -14,7 +14,7 @@ namespace SocketClient
     {
         Socket _socket = null;
         SocketAsyncEventArgs _SocketAsyncEventArgs = null;
-        byte[] _buff = null;
+        byte[] _buff = null;//发送缓冲区
         IPEndPoint _IPEndPoint = null;
         ClientHelper() { }
         public ClientHelper(IPEndPoint iPEndPoint, int buffSize) 
@@ -31,7 +31,15 @@ namespace SocketClient
                 Reconnect();
             }
         }
-        
+
+        /// <summary>
+        /// 重连
+        /// </summary>
+        private void ReConnect()
+        {
+            _socket = new Socket(_IPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            Connect();
+        }
         private void Connect()
         {
             
@@ -45,9 +53,9 @@ namespace SocketClient
         {
             _SocketAsyncEventArgs = new SocketAsyncEventArgs();
             _buff = new byte[buffSize];
-
             _IPEndPoint = iPEndPoint;
-            _socket = new Socket(iPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            _socket = new Socket(_IPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
         public void Send(string fileFullPath)
         {
@@ -55,28 +63,21 @@ namespace SocketClient
 
             CMD_DS cMD_DS = new CMD_DS();
 
-            using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+            using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 string fileName = FileHelper.GetFileName(fileFullPath);
 
                 byte[] fileBuf = Encoding.Default.GetBytes(fileName);
                 int fileNameLength = fileBuf.Length;
 
-                //sendBuf = cMD_DS._body.buffer = new byte[fs.Length + 4 + 4 + fileNameLength];//
-                //SetCMD(sendBuf, 0);
-                //SetFileNameLength(sendBuf, fileNameLength);
-                //SetFileName(sendBuf, fileBuf);
-
                 sendBuf = cMD_DS.GetSendBuff(0, fileName, (int)fs.Length);
 
                 BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
-                int sendOffset = Offset.fileNameOffset;
+                int sendOffset = Offset.sendOffset;//命令头的偏移
                 binaryReader.Read(sendBuf, sendOffset + fileNameLength, sendBuf.Length - sendOffset - fileNameLength);
                 binaryReader.Close();
                 binaryReader.Dispose();
             }
-
-            //Buffer.BlockCopy(sendBuf, 0, _buff, 0, sendBuf.Length);
 
             AsyncUserToken token = (AsyncUserToken)_SocketAsyncEventArgs.UserToken;
             token.SetTotalSendBuff(sendBuf);
@@ -86,13 +87,6 @@ namespace SocketClient
             {
                 ProcessSend(_SocketAsyncEventArgs);
             }
-
-            //_SocketAsyncEventArgs.SetBuffer(0, sendBuf.Length);
-            //bool willRaiseEvent = _socket.SendAsync(_SocketAsyncEventArgs);
-            //if (!willRaiseEvent)
-            //{
-            //    ProcessSend(_SocketAsyncEventArgs);
-            //}
         }
         void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -126,6 +120,8 @@ namespace SocketClient
             else
             {
                 //CloseClientSocket(e);
+                LogHelper.Log(LogType.Error_ConnectionReset, "");
+                ReConnect();
             }
         }
 
@@ -158,12 +154,16 @@ namespace SocketClient
                     //{
                     //    ProcessReceive(e);
                     //}
+                    token.Reset();
+                    LogHelper.Log(LogType.SUCCESS, "");
                 }
                 
             }
             else
             {
                 //CloseClientSocket(e);
+                LogHelper.Log(LogType.Error_ConnectionReset, "");
+                ReConnect();
             }
         }
         private void Release()

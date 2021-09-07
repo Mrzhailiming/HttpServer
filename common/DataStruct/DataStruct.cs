@@ -9,7 +9,8 @@ namespace DataStruct
         public Socket Socket;
         public int socketBuffLength = 0;
         public SocketAsyncEventArgs AsyncEventArgs = null;
-        //
+
+        //设置sendbuff的时候赋值， 发送完成后需要reset
         public byte[] sendBuff = null;
         public int hadSendNum = 0;
         public int needSendNum = 0;
@@ -17,6 +18,10 @@ namespace DataStruct
         //
         public bool isCompleteSend = false;
 
+        /// <summary>
+        /// 设置总共需要发送的buffer
+        /// </summary>
+        /// <param name="buf"></param>
         public void SetTotalSendBuff(byte[] buf)
         {
             sendBuff = buf;
@@ -24,6 +29,11 @@ namespace DataStruct
             needSendNum = buf.Length;
             isCompleteSend = false;
         }
+
+        /// <summary>
+        /// 设置本次发送的buffer
+        /// </summary>
+        /// <param name="sendLength"></param>
         public void SetBuffer(int sendLength)
         {
             int realSendNum = sendLength <= socketBuffLength ? sendLength : socketBuffLength;
@@ -32,6 +42,11 @@ namespace DataStruct
 
             AsyncEventArgs.SetBuffer(0, realSendNum);
         }
+
+        /// <summary>
+        /// 调用socket的异步发送接口
+        /// </summary>
+        /// <returns></returns>
         public bool SendAsync()
         {
             return Socket.SendAsync(AsyncEventArgs);
@@ -41,7 +56,6 @@ namespace DataStruct
             if (hadSendNum == needSendNum)
             {
                 isCompleteSend = true;
-                Dispose();
                 return true;//发送完毕
             }
             else
@@ -50,7 +64,7 @@ namespace DataStruct
             }
         }
 
-        private void Dispose()
+        public void Reset()
         {
             sendBuff = null;
             hadSendNum = 0;
@@ -59,12 +73,13 @@ namespace DataStruct
     }
     public class AsyncUserTokenRecv
     {
+        //new的时候赋值
         public int socketBuffLength = 0;
         public SocketAsyncEventArgs AsyncEventArgs = null;
 
         public Socket Socket;//accept之后赋值
 
-        //
+        //接收数据时赋值，一条指令接收完后需要reset
         public byte[] recvBuff = null;
         public byte[] headerBuff = null;
         public int hadRecvNum = 0;
@@ -126,7 +141,11 @@ namespace DataStruct
 
         public void Reset()
         {
-
+            recvBuff = null;
+            headerBuff = null;
+            hadRecvNum = 0;
+            needRecvNum = 0;
+            isRecvComplete = false;
         }
     }
 

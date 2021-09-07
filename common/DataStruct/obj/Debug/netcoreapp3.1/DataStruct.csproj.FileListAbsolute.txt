@@ -7,3 +7,4 @@ F:\Code\GitHub\HttpServer\common\DataStruct\obj\Debug\netcoreapp3.1\DataStruct.A
 F:\Code\GitHub\HttpServer\common\DataStruct\obj\Debug\netcoreapp3.1\DataStruct.csproj.CoreCompileInputs.cache
 F:\Code\GitHub\HttpServer\common\DataStruct\obj\Debug\netcoreapp3.1\DataStruct.dll
 F:\Code\GitHub\HttpServer\common\DataStruct\obj\Debug\netcoreapp3.1\DataStruct.pdb
+F:\Code\GitHub\HttpServer\common\DataStruct\obj\Debug\netcoreapp3.1\DataStruct.csproj.AssemblyReference.cache
