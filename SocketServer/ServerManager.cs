@@ -204,8 +204,10 @@ namespace SocketServer
                 }
                 else
                 {
-                    ProcessCmd(token.recvBuff);
+                    TCPTask task = new TCPTask(token.Socket, token.recvBuff);
+                    ProcessCmd(task);
                     token.Reset();
+                    token.ReceiveAsync();//继续接收
                 }
                 
 
@@ -270,11 +272,11 @@ namespace SocketServer
             Console.WriteLine("A client has been disconnected from the server. There are {0} clients connected to the server", m_numConnectedSockets);
         }
 
-        private static void ProcessCmd(byte[] cmd)
+        private static void ProcessCmd(TCPTask task)
         {
             try
             {
-                CMDDispatcher.Instance().Dispatcher(cmd);
+                CMDDispatcher.Instance().Dispatcher(task);
                 
             }
             catch (Exception ex)

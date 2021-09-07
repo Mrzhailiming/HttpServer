@@ -149,4 +149,18 @@ namespace DataStruct
         }
     }
 
+
+
+    public class TCPTask
+    {
+        public Socket clientSocket;
+        public byte[] buffer;
+        TCPTask() { }
+
+        public TCPTask(Socket socket, byte[] buf)
+        {
+            clientSocket = socket;
+            buffer = buf;
+        }
+    }
 }

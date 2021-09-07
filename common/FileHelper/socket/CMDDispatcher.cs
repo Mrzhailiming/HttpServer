@@ -7,19 +7,15 @@ using System.Text;
 
 namespace Helper
 {
-    public class CMDHandlerActionParam
-    {
-        public byte[] _buffer = null;
-    }
     public class CMDHandler
     {
-        public Action<CMDHandlerActionParam> _action = null;
+        public Action<TCPTask> _action = null;
 
     }
     public class CMDDispatcher : Singletion<CMDDispatcher>
     {
         Dictionary<TCPCMDS, CMDHandler> _CMD2Action = new Dictionary<TCPCMDS, CMDHandler>();
-        public void RegisterCMD(TCPCMDS cmdID, Action<CMDHandlerActionParam> action)
+        public void RegisterCMD(TCPCMDS cmdID, Action<TCPTask> action)
         {
             CMDHandler newHandler = new CMDHandler()
             {
@@ -37,9 +33,9 @@ namespace Helper
             }
         }
 
-        public void Dispatcher(byte[] buf)
+        public void Dispatcher(TCPTask task)
         {
-            TCPCMDS cmdID = (TCPCMDS)Byte4Int(buf);
+            TCPCMDS cmdID = (TCPCMDS)Byte4Int(task.buffer);
             CMDHandler outHandler;
             if (!_CMD2Action.TryGetValue(cmdID, out outHandler))
             {
@@ -48,11 +44,8 @@ namespace Helper
             else
             {
                 LogHelper.Log(LogType.Msg_ProcessCmd, cmdID.ToString());
-                CMDHandlerActionParam param = new CMDHandlerActionParam()
-                {
-                    _buffer = buf
-                };
-                outHandler._action(param);
+                
+                outHandler._action(task);
             }
         }
 

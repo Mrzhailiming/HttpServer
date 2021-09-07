@@ -18,9 +18,9 @@ namespace SocketServer
             CMDDispatcher.Instance().RegisterCMD(TCPCMDS.IMAGE, MyAction);
         }
 
-        void MyAction(CMDHandlerActionParam param)
+        void MyAction(TCPTask task)
         {
-            byte[] buff = param._buffer;
+            byte[] buff = task.buffer;
 
             int cmdID = GetCmdID(buff);
             int fileNameLength = GetFileNameLength(buff);
