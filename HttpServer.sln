@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServer", "HttpServer\HttpServer.csproj", "{285FEDB4-A5F7-4FB0-8453-E469ADEAEF30}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{7C77897D-18F5-4618-96BD-1AB8DFB1E485}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpClient", "Client\HttpClient.csproj", "{7C77897D-18F5-4618-96BD-1AB8DFB1E485}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketServer", "SocketServer\SocketServer.csproj", "{AF68E8B9-C0B2-4DD1-8BDE-7F82FDE88FDE}"
 EndProject
@@ -13,12 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketClient", "SocketClien
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{8FFD7582-52C0-44A9-8409-50BDA50B98B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helper", "common\FileHelper\Helper.csproj", "{449A1BCC-234B-4801-88DA-5653140C9471}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Helper", "common\FileHelper\Helper.csproj", "{449A1BCC-234B-4801-88DA-5653140C9471}"
 	ProjectSection(ProjectDependencies) = postProject
 		{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8} = {37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataStruct", "common\DataStruct\DataStruct.csproj", "{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataStruct", "common\DataStruct\DataStruct.csproj", "{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

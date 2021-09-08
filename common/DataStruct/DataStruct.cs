@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace DataStruct
+namespace DataStruct//应该不牵扯到逻辑代码
 {
     public class AsyncUserToken
     {
