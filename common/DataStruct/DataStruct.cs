@@ -5,27 +5,45 @@ namespace DataStruct
 {
     public class AsyncUserToken
     {
+        public string exeName;
         public Socket Socket = null;
         int socketBuffLength = 0;
-        SocketAsyncEventArgs AsyncEventArgs = null;
+        public SocketAsyncEventArgs AsyncEventArgs = null;
         public AsyncUserTokenSend asyncUserTokenSend = null;
         public AsyncUserTokenRecv asyncUserTokenRecv = null;
         AsyncUserToken() { }
+        
         /// <summary>
-        /// 
+        /// token
         /// </summary>
         /// <param name="socketBuffLen"></param>
         /// <param name="asyncEventArgs"></param>
-        /// <param name="socket">监听不设置，connect的时候要设置</param>
-        public AsyncUserToken(int socketBuffLen, SocketAsyncEventArgs asyncEventArgs, Socket socket = null) 
+        /// <param name="completeSendTORecv">发送完毕是否转换为接收</param>
+        /// <param name="ContinueRecv">接收完毕是否继续接收</param>
+        /// <param name="socket"></param>
+        public AsyncUserToken(int socketBuffLen, SocketAsyncEventArgs asyncEventArgs, bool completeSendTORecv, bool ContinueRecv, Socket socket = null) 
         {
             Socket = socket;
             socketBuffLength = socketBuffLen;
             AsyncEventArgs = asyncEventArgs;
-            asyncUserTokenSend = new AsyncUserTokenSend(socket, socketBuffLen, asyncEventArgs);
-            asyncUserTokenRecv = new AsyncUserTokenRecv(socketBuffLen, asyncEventArgs);
+            asyncUserTokenSend = new AsyncUserTokenSend(socket, socketBuffLen, asyncEventArgs, completeSendTORecv);
+            asyncUserTokenRecv = new AsyncUserTokenRecv(socketBuffLen, asyncEventArgs, ContinueRecv, socket);
+        }
+        public bool IsContinueRecv()
+        {
+            return asyncUserTokenRecv.isContinueRecv;
+        }
+        public bool IsCompleteSendTORecv()
+        {
+            return asyncUserTokenSend.isCompleteSendTORecv;
         }
 
+        public void SetSocket(Socket socket)
+        {
+            this.Socket = socket;
+            this.asyncUserTokenSend.Socket = socket;
+            this.asyncUserTokenRecv.Socket = socket;
+        }
     }
 
 
@@ -35,6 +53,7 @@ namespace DataStruct
         public Socket Socket;
         public int socketBuffLength = 0;
         public SocketAsyncEventArgs AsyncEventArgs = null;
+        public bool isCompleteSendTORecv = false;//send完毕是否转为recv, 这两个标志位同时只能有一个为true
 
         //设置sendbuff的时候赋值， 发送完成后需要reset
         public byte[] sendBuff = null;
@@ -45,11 +64,12 @@ namespace DataStruct
         public bool isCompleteSend = false;
 
         AsyncUserTokenSend() { }
-        public AsyncUserTokenSend(Socket socket, int socketBuffLen, SocketAsyncEventArgs asyncEventArgs)
+        public AsyncUserTokenSend(Socket socket, int socketBuffLen, SocketAsyncEventArgs asyncEventArgs, bool completeSendTORecv)
         {
             Socket = socket;
             socketBuffLength = socketBuffLen;
             AsyncEventArgs = asyncEventArgs;
+            isCompleteSendTORecv = completeSendTORecv;
         }
         /// <summary>
         /// 设置总共需要发送的buffer
@@ -70,10 +90,10 @@ namespace DataStruct
         public void SetBuffer(int sendLength)
         {
             int realSendNum = sendLength <= socketBuffLength ? sendLength : socketBuffLength;
-            Buffer.BlockCopy(sendBuff, hadSendNum, AsyncEventArgs.Buffer, 0, realSendNum);
+            Buffer.BlockCopy(sendBuff, hadSendNum, AsyncEventArgs.Buffer, AsyncEventArgs.Offset, realSendNum);
             hadSendNum += realSendNum;
 
-            AsyncEventArgs.SetBuffer(0, realSendNum);
+            AsyncEventArgs.SetBuffer(AsyncEventArgs.Offset, realSendNum);
         }
 
         /// <summary>
@@ -102,6 +122,7 @@ namespace DataStruct
             sendBuff = null;
             hadSendNum = 0;
             needSendNum = 0;
+            isCompleteSend = false;
         }
     }
     public class AsyncUserTokenRecv
@@ -109,8 +130,12 @@ namespace DataStruct
         //new的时候赋值
         public int socketBuffLength = 0;
         public SocketAsyncEventArgs AsyncEventArgs = null;
+        public bool isContinueRecv = false;//接收完毕是否继续接收，这两个标志位同时只能有一个为true
 
-        public Socket Socket;//accept之后赋值
+        /// <summary>
+        /// server端accept之后赋值
+        /// </summary>
+        public Socket Socket;
 
         //接收数据时赋值，一条指令接收完后需要reset
         public byte[] recvBuff = null;
@@ -121,10 +146,12 @@ namespace DataStruct
         //
         public bool isRecvComplete = false;
         AsyncUserTokenRecv() { }
-        public AsyncUserTokenRecv(int socketBuffLen, SocketAsyncEventArgs asyncEventArgs)
+        public AsyncUserTokenRecv(int socketBuffLen, SocketAsyncEventArgs asyncEventArgs, bool ContinueRecv, Socket socket = null)
         {
             socketBuffLength = socketBuffLen;
             AsyncEventArgs = asyncEventArgs;
+            Socket = socket;
+            isContinueRecv = ContinueRecv;
         }
         /// <summary>
         /// 调用Socket.ReceiveAsync
@@ -132,7 +159,15 @@ namespace DataStruct
         /// <returns></returns>
         public bool ReceiveAsync()
         {
-            return Socket.ReceiveAsync(AsyncEventArgs);
+            try
+            {
+                return Socket.ReceiveAsync(AsyncEventArgs);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("ReceiveAsync异常：{0}", ex.ToString());
+            }
+            return true;
         }
 
         /// <summary>
@@ -140,28 +175,36 @@ namespace DataStruct
         /// </summary>
         public void BuffCopy()
         {
-            if(needRecvNum <= 0)
+            try
             {
-                headerBuff = new byte[AsyncEventArgs.BytesTransferred];
-
-                Buffer.BlockCopy(AsyncEventArgs.Buffer, AsyncEventArgs.Offset, headerBuff, 0, AsyncEventArgs.BytesTransferred);
-                hadRecvNum += AsyncEventArgs.BytesTransferred;
-                if (hadRecvNum >= 8)
+                if (needRecvNum <= 0)
                 {
-                    byte[] needRecvNumBuff = new byte[4];
-                    Buffer.BlockCopy(headerBuff, 4, needRecvNumBuff, 0, 4);//
-                    needRecvNum = BitConverter.ToInt32(needRecvNumBuff);//获取命令包长度
-                    recvBuff = new byte[needRecvNum];
-                    Buffer.BlockCopy(headerBuff, 0, recvBuff, 0, headerBuff.Length);
+                    
+                    headerBuff = new byte[AsyncEventArgs.BytesTransferred];
+
+                    Buffer.BlockCopy(AsyncEventArgs.Buffer, AsyncEventArgs.Offset, headerBuff, 0, AsyncEventArgs.BytesTransferred);
+                    hadRecvNum += AsyncEventArgs.BytesTransferred;
+                    if (hadRecvNum >= 8)
+                    {
+                        byte[] needRecvNumBuff = new byte[4];
+                        Buffer.BlockCopy(headerBuff, 4, needRecvNumBuff, 0, 4);//
+                        needRecvNum = BitConverter.ToInt32(needRecvNumBuff);//获取命令包长度
+                        recvBuff = new byte[needRecvNum];
+                        Buffer.BlockCopy(headerBuff, 0, recvBuff, 0, headerBuff.Length);
+                    }
+                }
+                else if (hadRecvNum < needRecvNum)
+                {
+                    //AsyncEventArgs.BytesTransferred 大于剩余需要拷贝的字节数，说明下一条数据来了
+                    int realCopy = AsyncEventArgs.BytesTransferred <= (needRecvNum - hadRecvNum) ? AsyncEventArgs.BytesTransferred : (needRecvNum - hadRecvNum);
+                    Buffer.BlockCopy(AsyncEventArgs.Buffer, AsyncEventArgs.Offset, recvBuff, hadRecvNum, realCopy);
+
+                    hadRecvNum += realCopy;
                 }
             }
-            else if(hadRecvNum < needRecvNum)
+            catch(Exception ex)
             {
-                //AsyncEventArgs.BytesTransferred 大于剩余需要拷贝的字节数，说明下一条数据来了
-                int realCopy = AsyncEventArgs.BytesTransferred <= (needRecvNum - hadRecvNum) ? AsyncEventArgs.BytesTransferred : (needRecvNum - hadRecvNum);
-                Buffer.BlockCopy(AsyncEventArgs.Buffer, AsyncEventArgs.Offset, recvBuff, hadRecvNum, realCopy);
-
-                hadRecvNum += realCopy;
+                Console.WriteLine("BuffCopy异常{0}：", ex.ToString());
             }
         }
         public bool Check()

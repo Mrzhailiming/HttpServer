@@ -11,10 +11,10 @@ namespace Helper
         Stack<SocketAsyncEventArgs> _listEvent = new Stack<SocketAsyncEventArgs>();
         public SocketAsyncEventArgsPool(int maxNum)
         {
-            for(int i = 0; i < maxNum; ++i)
-            {
-                _listEvent.Push(new SocketAsyncEventArgs());
-            }
+            //for(int i = 0; i < maxNum; ++i)
+            //{
+            //    _listEvent.Push(new SocketAsyncEventArgs());
+            //}
         }
         public bool Push(SocketAsyncEventArgs sae)
         {

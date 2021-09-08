@@ -10,14 +10,16 @@ using System.Threading;
 
 namespace SocketClient
 {
-    class ClientHelper
+    class TestClient
     {
         Socket _socket = null;
         SocketAsyncEventArgs _SocketAsyncEventArgs = null;
         byte[] _buff = null;//发送缓冲区
         IPEndPoint _IPEndPoint = null;
-        ClientHelper() { }
-        public ClientHelper(IPEndPoint iPEndPoint, int buffSize) 
+
+        int m_totalBytesRead = 0;
+        TestClient() { }
+        public TestClient(IPEndPoint iPEndPoint, int buffSize)
         {
             try
             {
@@ -42,7 +44,7 @@ namespace SocketClient
         }
         private void Connect()
         {
-            
+
             _socket.Connect(_IPEndPoint.Address, _IPEndPoint.Port);
 
             _SocketAsyncEventArgs.SetBuffer(_buff, 0, _buff.Length);
@@ -137,94 +139,55 @@ namespace SocketClient
                     throw new ArgumentException("The last operation completed on the socket was not a receive or send");
             }
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        public void ProcessReceive(SocketAsyncEventArgs e)
+        // This method is invoked when an asynchronous receive operation completes.
+        // If the remote host closed the connection, then the socket is closed.
+        // If data was received then the data is echoed back to the client.
+        //
+        private void ProcessReceive(SocketAsyncEventArgs e)
         {
             // check if the remote host closed the connection
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
-                token.asyncUserTokenRecv.BuffCopy();
-                if (!token.asyncUserTokenRecv.Check())
+                //increment the count of the total bytes receive by the server
+                Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
+                Console.WriteLine("The Client has read a total of {0} bytes", m_totalBytesRead);
+
+                //echo the data received back to the client
+                e.SetBuffer(e.Offset, e.BytesTransferred);
+                bool willRaiseEvent = token.Socket.SendAsync(e);
+                if (!willRaiseEvent)
                 {
-                    bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
-                    if (!willRaiseEvent)
-                    {
-                        ProcessReceive(e);//递归
-                    }
-                }
-                else
-                {
-                    TCPTask task = new TCPTask(token.Socket, token.asyncUserTokenRecv.recvBuff, e);
-                    token.asyncUserTokenRecv.Reset();
-
-                    ProcessCmd(task);
-
-                    LogHelper.Log(LogType.SUCCESS, "client ProcessReceive complete");
-
-                    token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+                    ProcessSend(e);
                 }
             }
             else
             {
-                LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");
+                //CloseClientSocket(e);
             }
         }
 
-        bool isbeginRecv = false;
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        public void ProcessSend(SocketAsyncEventArgs e)
+        // This method is invoked when an asynchronous send operation completes.
+        // The method issues another receive on the socket to read any additional
+        // data sent from the client
+        //
+        // <param name="e"></param>
+        private void ProcessSend(SocketAsyncEventArgs e)
         {
             if (e.SocketError == SocketError.Success)
             {
                 // done echoing data back to the client
                 AsyncUserToken token = (AsyncUserToken)e.UserToken;
-
-                if (!token.asyncUserTokenSend.IsSendComplete())//没发送完
+                // read the next block of data send from the client
+                bool willRaiseEvent = token.Socket.ReceiveAsync(e);
+                if (!willRaiseEvent)
                 {
-                    token.asyncUserTokenSend.SetBuffer(token.asyncUserTokenSend.needSendNum - token.asyncUserTokenSend.hadSendNum);
-                    bool send = token.asyncUserTokenSend.SendAsync();
-                    if (!send)
-                    {
-                        ProcessSend(e);//继续发送
-                    }
+                    ProcessReceive(e);
                 }
-                else//发送完了
-                {
-                    token.asyncUserTokenSend.Reset();
-
-                    if (!this.isbeginRecv)
-                    {
-                        this.isbeginRecv = true;
-                        token.asyncUserTokenRecv.ReceiveAsync();//转为接收
-                    }
-                    LogHelper.Log(LogType.SUCCESS, "client ProcessSend complete");
-                }
-
             }
             else
             {
-                LogHelper.Log(LogType.Error_ConnectionReset, "ProcessSend()");
-            }
-        }
-
-        public void ProcessCmd(TCPTask task)
-        {
-            try
-            {
-                CMDDispatcher.Instance().Dispatcher(task);
-
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Log(LogType.Exception_ProcessCmd, ex.ToString());
+                //CloseClientSocket(e);
             }
         }
     }

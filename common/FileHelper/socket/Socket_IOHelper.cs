@@ -6,11 +6,12 @@ using System.Text;
 
 namespace Helper
 {
-    public class Socket_IOHelper
+    public class Socket_IOHelper_____
     {
         public static void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
             // determine which type of operation just completed and call the associated handler
+            AsyncUserToken token = (AsyncUserToken)e.UserToken;
             switch (e.LastOperation)
             {
                 case SocketAsyncOperation.Receive:
@@ -25,7 +26,7 @@ namespace Helper
         }
 
         /// <summary>
-        /// 只管接收
+        /// 
         /// </summary>
         /// <param name="e"></param>
         public static void ProcessReceive(SocketAsyncEventArgs e)
@@ -46,9 +47,14 @@ namespace Helper
                 else
                 {
                     TCPTask task = new TCPTask(token.Socket, token.asyncUserTokenRecv.recvBuff, e);
-                    ProcessCmd(task);
                     token.asyncUserTokenRecv.Reset();
-                    token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+
+                    ProcessCmd(task);
+
+                    if (token.IsContinueRecv())
+                    {
+                        token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+                    }
                 }
             }
             else
@@ -58,7 +64,7 @@ namespace Helper
         }
 
         /// <summary>
-        /// 只管发送
+        /// 
         /// </summary>
         /// <param name="e"></param>
         public static void ProcessSend(SocketAsyncEventArgs e)
@@ -77,10 +83,14 @@ namespace Helper
                         ProcessSend(e);//继续发送
                     }
                 }
-                else
+                else//发送完了
                 {
-                    
                     token.asyncUserTokenSend.Reset();
+
+                    if (token.IsCompleteSendTORecv())
+                    {
+                        token.asyncUserTokenRecv.ReceiveAsync();//转为接收
+                    }
                     LogHelper.Log(LogType.SUCCESS, "");
                 }
 

@@ -1,8 +1,10 @@
 ﻿using DataStruct;
 using Helper;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace SocketServer
@@ -14,6 +16,8 @@ namespace SocketServer
 
     class ServerManager
     {
+        public static ServerManager Instance = new ServerManager();
+
         private int m_numConnections;   // the maximum number of connections the sample is designed to handle simultaneously
         private int m_receiveBufferSize;// buffer size to use for each socket I/O operation
         BufferManager m_bufferManager;  // represents a large reusable set of buffers for all socket operations
@@ -55,8 +59,8 @@ namespace SocketServer
             {
                 //Pre-allocate a set of reusable SocketAsyncEventArgs
                 readWriteEventArg = new SocketAsyncEventArgs();
-                readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(Socket_IOHelper.IO_Completed);
-                readWriteEventArg.UserToken = new AsyncUserToken(m_receiveBufferSize * 2, readWriteEventArg);
+                readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
+                readWriteEventArg.UserToken = new AsyncUserToken(m_receiveBufferSize * 2, readWriteEventArg, false, true, null);
 
                 // assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
                 m_bufferManager.SetBuffer(readWriteEventArg);
@@ -78,8 +82,15 @@ namespace SocketServer
             StartAccept(null);
 
             //Console.WriteLine("{0} connected sockets with one outstanding receive posted to each....press any key", m_outstandingReadCount);
-            Console.WriteLine("Press any key to terminate the server process....");
-            Console.ReadKey();
+            Console.WriteLine("server process....");
+            while (true)
+            {
+                string ch = Console.ReadLine();
+                if("s" == ch)
+                {
+                    Test();
+                }
+            }
         }
 
         public void StartAccept(SocketAsyncEventArgs acceptEventArg)
@@ -119,17 +130,125 @@ namespace SocketServer
             SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
 
             AsyncUserToken token = (AsyncUserToken)readEventArgs.UserToken;
-            token.Socket = e.AcceptSocket;
+            token.SetSocket(e.AcceptSocket);
+
+            _SocketAsyncEventArgs = readEventArgs;//test
 
             bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();//接收连接后的第一件事就是receive
             if (!willRaiseEvent)
             {
-                Socket_IOHelper.ProcessReceive(readEventArgs);
+                ProcessReceive(readEventArgs);
             }
 
             //Accept下一个连接请求
             StartAccept(e);
         }
+
+        public void IO_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            // determine which type of operation just completed and call the associated handler
+            AsyncUserToken token = (AsyncUserToken)e.UserToken;
+            switch (e.LastOperation)
+            {
+                case SocketAsyncOperation.Receive:
+                    ProcessReceive(e);
+                    break;
+                case SocketAsyncOperation.Send:
+                    ProcessSend(e);
+                    break;
+                default:
+                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
+        public void ProcessReceive(SocketAsyncEventArgs e)
+        {
+            // check if the remote host closed the connection
+            AsyncUserToken token = (AsyncUserToken)e.UserToken;
+            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
+            {
+                //increment the count of the total bytes receive by the server
+                Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
+                Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
+
+                token.asyncUserTokenRecv.BuffCopy();
+                if (!token.asyncUserTokenRecv.Check())
+                {
+                    bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
+                    if (!willRaiseEvent)
+                    {
+                        ProcessReceive(e);
+                    }
+                }
+                else
+                {
+                    TCPTask task = new TCPTask(token.Socket, token.asyncUserTokenRecv.recvBuff, e);
+                    token.asyncUserTokenRecv.Reset();
+
+                    ProcessCmd(task);
+
+                    LogHelper.Log(LogType.SUCCESS, "ProcessReceive complete");
+                    token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+                }
+            }
+            else
+            {
+                LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
+        public void ProcessSend(SocketAsyncEventArgs e)
+        {
+            if (e.SocketError == SocketError.Success)
+            {
+                // done echoing data back to the client
+                AsyncUserToken token = (AsyncUserToken)e.UserToken;
+
+                if (!token.asyncUserTokenSend.IsSendComplete())//没发送完
+                {
+                    token.asyncUserTokenSend.SetBuffer(token.asyncUserTokenSend.needSendNum - token.asyncUserTokenSend.hadSendNum);
+                    bool send = token.asyncUserTokenSend.SendAsync();
+                    if (!send)
+                    {
+                        ProcessSend(e);//继续发送
+                    }
+                }
+                else//发送完了
+                {
+                    token.asyncUserTokenSend.Reset();
+
+                    LogHelper.Log(LogType.SUCCESS, "ProcessSend complete");
+                }
+
+            }
+            else
+            {
+                LogHelper.Log(LogType.Error_ConnectionReset, "ProcessSend()");
+            }
+        }
+
+        public void ProcessCmd(TCPTask task)
+        {
+            try
+            {
+                CMDDispatcher.Instance().Dispatcher(task);
+
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Log(LogType.Exception_ProcessCmd, ex.ToString());
+            }
+        }
+
+        #region old
 
         //// This method is called whenever a receive or send operation is completed on a socket
         ////
@@ -180,7 +299,7 @@ namespace SocketServer
         //            token.Reset();
         //            token.ReceiveAsync();//继续接收
         //        }
-                
+
 
         //        ////echo the data received back to the client
         //        //e.SetBuffer(e.Offset, e.BytesTransferred);
@@ -219,6 +338,7 @@ namespace SocketServer
         //        CloseClientSocket(e);
         //    }
         //}
+        #endregion
 
         private void CloseClientSocket(SocketAsyncEventArgs e)
         {
@@ -243,19 +363,50 @@ namespace SocketServer
             Console.WriteLine("A client has been disconnected from the server. There are {0} clients connected to the server", m_numConnectedSockets);
         }
 
-        private static void ProcessCmd(TCPTask task)
+        public void SendMsg(AsyncUserToken token, byte[] sendBuf)
         {
-            try
+            token.asyncUserTokenSend.SetTotalSendBuff(sendBuf);
+            token.asyncUserTokenSend.SetBuffer(sendBuf.Length);
+            bool willRaiseEvent = token.asyncUserTokenSend.SendAsync();
+            if (!willRaiseEvent)
             {
-                CMDDispatcher.Instance().Dispatcher(task);
-                
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Log(LogType.Exception_ProcessCmd, ex.ToString());
+                ProcessSend(token.AsyncEventArgs);
             }
         }
 
-        
+        public SocketAsyncEventArgs _SocketAsyncEventArgs;
+        public void Test()
+        {
+            byte[] sendBuf;
+            string fileFullPath = @"F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\Socket\test.jpg";
+
+            CMD_DS cMD_DS = new CMD_DS();
+
+            using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                string fileName = FileHelper.GetFileName(fileFullPath);
+
+                byte[] fileBuf = Encoding.Default.GetBytes(fileName);
+                int fileNameLength = fileBuf.Length;
+
+                sendBuf = cMD_DS.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, (int)fs.Length);
+
+                BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
+                int sendOffset = Offset.sendOffset;//命令头的偏移
+                binaryReader.Read(sendBuf, sendOffset + fileNameLength, sendBuf.Length - sendOffset - fileNameLength);
+                binaryReader.Close();
+                binaryReader.Dispose();
+            }
+
+            AsyncUserToken token = (AsyncUserToken)_SocketAsyncEventArgs.UserToken;
+            token.asyncUserTokenSend.SetTotalSendBuff(sendBuf);
+            token.asyncUserTokenSend.SetBuffer(sendBuf.Length);
+            bool willRaiseEvent = token.asyncUserTokenSend.SendAsync();
+            if (!willRaiseEvent)
+            {
+                ProcessSend(_SocketAsyncEventArgs);
+            }
+        }
     }
+    
 }

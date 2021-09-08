@@ -12,11 +12,15 @@ namespace SocketServer
 
             int numConnections = 100;
             int receiveBufferSize = 1024 * 1024;
-            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
 
+            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
             ServerManager server = new ServerManager(numConnections, receiveBufferSize);
             server.Init();
             server.Start(iPEndPoint);
+
+            //Server server1 = new Server(numConnections, receiveBufferSize);
+            //server1.Init();
+            //server1.Start(iPEndPoint);
 
             Console.WriteLine("Hello World!");
             Console.ReadLine();
