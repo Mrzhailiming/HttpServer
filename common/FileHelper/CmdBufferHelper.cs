@@ -15,7 +15,7 @@ namespace DataStruct
         /// </summary>
         public const int sendOffset = 12;
     }
-    public class CMD_DS
+    public class CmdBufferHelper
     {
         public CMDHeader _header = new CMDHeader();
 

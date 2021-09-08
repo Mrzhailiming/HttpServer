@@ -25,7 +25,7 @@ namespace SocketServer
             Socket clientSocket = task.clientSocket;
             byte[] buff = task.buffer;
             byte[] sendBuf;
-            CMD_DS cMD_DS = new CMD_DS();
+            CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
 
             int cmdID = CMDHelper.GetCmdID(buff);
             int fileNameLength = CMDHelper.GetCmdFileNameLength(buff);
@@ -34,7 +34,7 @@ namespace SocketServer
             string filepath = string.Format(@"{0}\Socket", Environment.CurrentDirectory);
             using (FileStream fileStream = FileHelper.OpenFile(filepath, fileName))
             {
-                sendBuf = cMD_DS.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, (int)fileStream.Length);
+                sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, (int)fileStream.Length);
                 //sendBuf = new byte[fileStream.Length + Offset.sendOffset + fileNameLength];
 
                 BinaryReader binaryReader = new BinaryReader(fileStream);

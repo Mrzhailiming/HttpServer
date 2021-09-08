@@ -380,7 +380,7 @@ namespace SocketServer
             byte[] sendBuf;
             string fileFullPath = @"F:\Code\GitHub\HttpServer\HttpServer\bin\Debug\netcoreapp3.1\Socket\test.jpg";
 
-            CMD_DS cMD_DS = new CMD_DS();
+            CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
 
             using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -389,7 +389,7 @@ namespace SocketServer
                 byte[] fileBuf = Encoding.Default.GetBytes(fileName);
                 int fileNameLength = fileBuf.Length;
 
-                sendBuf = cMD_DS.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, (int)fs.Length);
+                sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, (int)fs.Length);
 
                 BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
                 int sendOffset = Offset.sendOffset;//命令头的偏移

@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Helper
 {
+    /// <summary>
+    /// 暂时不用
+    /// </summary>
     public class Socket_IOHelper_____
     {
         public static void IO_Completed(object sender, SocketAsyncEventArgs e)
