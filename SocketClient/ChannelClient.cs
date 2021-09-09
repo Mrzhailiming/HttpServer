@@ -19,8 +19,6 @@ namespace SocketClient
         /// 负责下载
         /// </summary>
         ChannelHelper channelDownload;
-
-        SocketAsyncEventArgs _SocketAsyncEventArgs;
         public ChannelClient(IPEndPoint UploadiPEndPoint, IPEndPoint DownloadiPEndPoint, int buffSize)
         {
             //和服务器正好相反

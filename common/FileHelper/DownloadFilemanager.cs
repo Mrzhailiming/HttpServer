@@ -46,7 +46,7 @@ namespace Helper
             //设置发送数据
             //ServerManager.Instance.SendMsg((AsyncUserToken)task.socketAsyncEventArgs.UserToken, sendBuf);
 
-            ChannelServer channelServer = task._server as ChannelServer;
+            ChannelServer channelServer = (ChannelServer)task._server;
             channelServer.SetSendBuffer(task.clientEndPoint, sendBuf);
             
         }
