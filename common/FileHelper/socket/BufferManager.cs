@@ -13,7 +13,7 @@ namespace Helper
         int _totalByteCount = 0;
 
         int _usedByteCount = 0;
-        public BufferManager() { }
+        BufferManager() { }
         public BufferManager(int byteCount, int perBufferSize)
         {
             _totalByteCount = byteCount;

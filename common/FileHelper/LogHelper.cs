@@ -18,6 +18,7 @@ namespace Helper
         Exception_ProcessCmd,
 
         Error_ProcessSend,
+        Error_ClientNotFound,
     }
     public class LogHelper
     {

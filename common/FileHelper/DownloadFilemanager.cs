@@ -6,9 +6,9 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
-namespace SocketServer
+namespace Helper
 {
-    class DownloadFilemanager
+    public class DownloadFilemanager
     {
         public DownloadFilemanager()
         {

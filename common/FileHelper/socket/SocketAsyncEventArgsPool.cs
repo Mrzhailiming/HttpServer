@@ -9,6 +9,7 @@ namespace Helper
     public class SocketAsyncEventArgsPool
     {
         Stack<SocketAsyncEventArgs> _listEvent = new Stack<SocketAsyncEventArgs>();
+        public SocketAsyncEventArgsPool() { }
         public SocketAsyncEventArgsPool(int maxNum)
         {
             //for(int i = 0; i < maxNum; ++i)
@@ -25,7 +26,10 @@ namespace Helper
         {
             try
             {
-                return _listEvent.Pop();
+                if(_listEvent.Count > 0)
+                {
+                    return _listEvent.Pop();
+                }
             }
             catch(Exception ex)
             {

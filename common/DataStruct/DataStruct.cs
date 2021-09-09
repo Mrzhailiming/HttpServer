@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Net;
 using System.Net.Sockets;
 
 namespace DataStruct//应该不牵扯到逻辑代码
 {
     public class AsyncUserToken
     {
+        public object _channelHelper;
+
         public string exeName;
         public Socket Socket = null;
         int socketBuffLength = 0;
@@ -45,7 +48,6 @@ namespace DataStruct//应该不牵扯到逻辑代码
             this.asyncUserTokenRecv.Socket = socket;
         }
     }
-
 
     public class AsyncUserTokenSend
     {
@@ -231,19 +233,31 @@ namespace DataStruct//应该不牵扯到逻辑代码
     }
 
 
-
     public class TCPTask
     {
         public Socket clientSocket;
         public byte[] buffer;
         public SocketAsyncEventArgs socketAsyncEventArgs;
+        public EndPoint clientEndPoint;
+        /// <summary>
+        /// 目前来看，主要是为了传ChannelServer， 获取downloadchannel
+        /// </summary>
+        public object _server;
         TCPTask() { }
 
-        public TCPTask(Socket socket, byte[] buf, SocketAsyncEventArgs AsyncEventArgs)
+        public TCPTask(Socket socket, byte[] buf, SocketAsyncEventArgs AsyncEventArgs, object server = null)
         {
             clientSocket = socket;
             buffer = buf;
             socketAsyncEventArgs = AsyncEventArgs;
+            _server = server;
+
+            clientEndPoint = (socketAsyncEventArgs.UserToken as AsyncUserToken).Socket.RemoteEndPoint;
         }
+    }
+
+    public class Client
+    {
+        public SocketAsyncEventArgs _clientSocketAsyncEventArgs;
     }
 }
