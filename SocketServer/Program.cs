@@ -8,7 +8,7 @@ namespace SocketServer
     {
         static void Main(string[] args)
         {
-            int numConnections = 100;
+            int numConnections = 101;
             int receiveBufferSize = 1024 * 1024;
 
             //指令处理

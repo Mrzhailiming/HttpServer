@@ -9,7 +9,9 @@ namespace Helper
 {
     public class ChannelServer
     {
-
+        /// <summary>
+        /// ip:port 作为download通道的寻找client的key，但是task存储的是upload通道的ip:port
+        /// </summary>
         Dictionary<string, Client> _clientDic = new Dictionary<string, Client>();
         /// <summary>
         /// 负责上传
@@ -41,7 +43,7 @@ namespace Helper
         }
         public void SetSendBuffer(EndPoint clientEndPoint, byte[] buff)
         {
-            Client client = FindClient(GetIP(clientEndPoint));
+            Client client = FindClient(clientEndPoint.ToString());
             if (null != client)
             {
                 channelDownload.SetSendBuffer(client._clientSocketAsyncEventArgs, buff, 0, buff.Length);
@@ -81,9 +83,11 @@ namespace Helper
         {
             AsyncUserToken token = newSocketEventArgs.UserToken as AsyncUserToken;
             EndPoint remoteEndPoint = token.Socket.RemoteEndPoint;
+            token.exeName = $"server_downloadchannel_{remoteEndPoint}";
+
             //记录一个新链接
             //_clientDic[remoteEndPoint] = new Client() { _clientSocketAsyncEventArgs = newSocketEventArgs };
-            _clientDic[GetIP(remoteEndPoint)] = new Client() { _clientSocketAsyncEventArgs = newSocketEventArgs };
+            _clientDic[remoteEndPoint.ToString()] = new Client() { _clientSocketAsyncEventArgs = newSocketEventArgs };
         }
 
         private string GetIP(EndPoint remoteEndPoint)

@@ -17,10 +17,11 @@ namespace Helper
     }
     public class CMDDispatcher : Singletion<CMDDispatcher>
     {
-        static int threadNum = 4;
-        static int semaphoreMaximumCount = 100;//100个不够吧
+        static int threadNum = 1;
+        static int semaphoreMaximumCount = 10000;//100个不够吧
         Semaphore semaphore = new Semaphore(0, semaphoreMaximumCount);
         static int count = 0;
+        static Dictionary<string, int> threadCount = new Dictionary<string, int>();
 
         Dictionary<TCPCMDS, CMDHandler> _CMD2Action = new Dictionary<TCPCMDS, CMDHandler>();
         ConcurrentQueue<TCPTask> _taskQueue = new ConcurrentQueue<TCPTask>();
@@ -29,7 +30,8 @@ namespace Helper
             for(int i = 0; i < threadNum; ++i)
             {
                 Thread thread = new Thread(Execute);
-                thread.Name = i.ToString();
+                thread.Name = $"task_{i}";
+                threadCount[thread.Name] = 0;
                 thread.Start();
             }
         }
@@ -79,7 +81,7 @@ namespace Helper
                     task = null;
                     outHandler = null;
                     Interlocked.Increment(ref count);
-                    Console.WriteLine("threadName:{0}__taskID:{1}", Thread.CurrentThread.Name, count);
+                    Console.WriteLine("threadName:{0}__taskID:{1}__ProcessedTask:{2}", Thread.CurrentThread.Name, count, ++threadCount[Thread.CurrentThread.Name]);
                 }
             }
         }

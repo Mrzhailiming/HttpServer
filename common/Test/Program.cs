@@ -7,8 +7,8 @@ namespace Test
     {
         static void Main(string[] args)
         {
-            CMDDispatcher dispatcher = new CMDDispatcher();
-            dispatcher.Test();
+            //CMDDispatcher dispatcher = new CMDDispatcher();
+            //dispatcher.Test();
             Console.WriteLine("Hello World!");
         }
     }

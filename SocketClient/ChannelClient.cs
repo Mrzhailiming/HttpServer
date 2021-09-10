@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace SocketClient
 {
@@ -19,11 +20,13 @@ namespace SocketClient
         /// 负责下载
         /// </summary>
         ChannelHelper channelDownload;
+
+        byte[] sendBuf;
         public ChannelClient(IPEndPoint UploadiPEndPoint, IPEndPoint DownloadiPEndPoint, int buffSize)
         {
             //和服务器正好相反
             channelDownload = new ChannelHelper(DownloadiPEndPoint, SocketType.Stream, ProtocolType.Tcp, null, UploadProcessCmd, true, buffSize);
-            channelUpload = new ChannelHelper(UploadiPEndPoint, SocketType.Stream, ProtocolType.Tcp, null, DownloadProcessCmd, false, buffSize);
+            channelUpload = new ChannelHelper(UploadiPEndPoint, SocketType.Stream, ProtocolType.Tcp, null, DownloadProcessCmd, false, buffSize, 0, null, CompleteSendCallBack);
         }
 
         public void Start()
@@ -33,8 +36,6 @@ namespace SocketClient
         }
         public void Send(string fileFullPath)
         {
-            byte[] sendBuf;
-
             CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
 
             using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -68,6 +69,17 @@ namespace SocketClient
             channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
             channelUpload.BeginSend();
         }
+
+
+
+        public void CompleteSendCallBack(SocketAsyncEventArgs socketAsyncEventArgs)
+        {
+            //channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
+            //channelUpload.BeginSend();
+        }
+
+
+
         public void UploadconnectSuccessCallBack(object sender, SocketAsyncEventArgs connectAsyncEventArgs)
         {
             //do nothing
@@ -76,6 +88,7 @@ namespace SocketClient
         {
             AsyncUserToken token = (AsyncUserToken)connectAsyncEventArgs.UserToken;
             ChannelHelper channelHelper = token._channelHelper as ChannelHelper;
+            token.exeName = $"client_downloadchannel_{token.Socket.RemoteEndPoint}";
             //执行recv
             bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
             if (!willRaiseEvent)
@@ -83,16 +96,7 @@ namespace SocketClient
                 channelHelper.ProcessReceive(connectAsyncEventArgs);
             }
         }
-        void UploadAfterAcceptCallBack(SocketAsyncEventArgs newSocketEventArgs, ChannelHelper channelHelper)
-        {
-            AsyncUserToken token = (AsyncUserToken)newSocketEventArgs.UserToken;
-            //执行recv
-            bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
-            if (!willRaiseEvent)
-            {
-                channelHelper.ProcessReceive(newSocketEventArgs);
-            }
-        }
+
         void UploadProcessCmd(TCPTask task)
         {
             try

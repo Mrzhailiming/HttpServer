@@ -1,5 +1,6 @@
 ﻿using Helper;
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace SocketClient
@@ -20,23 +21,37 @@ namespace SocketClient
 
             IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
             IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8081);
-            ChannelClient client = new ChannelClient(upiPEndPoint, downiPEndPoint, bufferSize);
-            client.Start();
+
+            Dictionary<int, ChannelClient> clientDic = new Dictionary<int, ChannelClient>();
+
+            for(int i = 0; i < 101; ++i)
+            {
+                ChannelClient client = new ChannelClient(upiPEndPoint, downiPEndPoint, bufferSize);
+                client.Start();
+                clientDic[i] = client;
+            }
+            
 
             while (true)
             {
                 try
                 {
                     string ch = Console.ReadLine();
-                    if("s" == ch.ToLower())
+                    if ("s" == ch.ToLower())
                     {
                         string fileFullPath = Console.ReadLine();
-                        client.Send(fileFullPath);
+                        foreach(ChannelClient client in clientDic.Values)
+                        {
+                            client.Send(fileFullPath);
+                        }
                     }
-                    else if("g" == ch.ToLower())
+                    else if ("g" == ch.ToLower())
                     {
                         string fileFullPath = Console.ReadLine();
-                        client.Get(fileFullPath);
+                        foreach (ChannelClient client in clientDic.Values)
+                        {
+                            client.Get(fileFullPath);
+                        }
                     }
                     else
                     {

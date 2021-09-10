@@ -7,6 +7,12 @@ using System.Threading;
 namespace Helper
 {
     /// <summary>
+    /// send完成后调用的函数
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void CompleteSendCallBack(SocketAsyncEventArgs e);
+    /// <summary>
     /// connect成功后调用的函数
     /// </summary>
     public delegate void ConnectSuccessCallBack(object sender, SocketAsyncEventArgs e);
@@ -29,10 +35,6 @@ namespace Helper
         /// </summary>
         SocketAsyncEventArgs _socketEventArg = null;
         /// <summary>
-        /// accept一个连接后,0.啥也不干 1.执行recv 2.执行send
-        /// </summary>
-        //int _acceptedTodo = 0;
-        /// <summary>
         /// accept一个连接后调用的函数
         /// </summary>
         AfterAcceptCallBack afterAcceptCallBack;
@@ -40,7 +42,10 @@ namespace Helper
         /// 接收完命令包调用的函数
         /// </summary>
         ProcessCmd processCmd;
-
+        /// <summary>
+        /// send完成后调用的函数
+        /// </summary>
+        CompleteSendCallBack completeSendCallBack;
         /// <summary>
         /// 完成一个命令包接收后，是否继续接收
         /// </summary>
@@ -70,14 +75,14 @@ namespace Helper
         /// <param name="maxConnections">最大客户端连接数，服务器需要赋值</param>
         public ChannelHelper(IPEndPoint iPEndPoint, SocketType socketType, ProtocolType protocolType,
             AfterAcceptCallBack AcceptCallBack, ProcessCmd processcmd, bool isCompleteRecv_Recv,
-            int receiveBufferSize, int maxConnections = 0, object server = null)
+            int receiveBufferSize, int maxConnections = 0, object server = null, CompleteSendCallBack completeSendCall = null)
         {
             _socket = new Socket(iPEndPoint.AddressFamily, socketType, protocolType);
             _iPEndPoint = iPEndPoint;
 
-            //_acceptedTodo = acceptedTodo;
             afterAcceptCallBack = AcceptCallBack;
             processCmd = processcmd;
+            completeSendCallBack = completeSendCall;
             completeRecv_Recv = isCompleteRecv_Recv;
 
             _receiveBufferSize = receiveBufferSize;
@@ -251,31 +256,6 @@ namespace Helper
         }
 
         /// <summary>
-        /// 接收完新连接后需要做的事
-        /// </summary>
-        /// <param name="newSocketEventArgs"></param>
-        //public void AfterAcceptCallBack(SocketAsyncEventArgs newSocketEventArgs, ChannelHelper channelHelper)
-        //{
-        //    AsyncUserToken token = (AsyncUserToken)newSocketEventArgs.UserToken;
-        //    if(1 == _acceptedTodo)//执行recv
-        //    {
-        //        bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
-        //        if (!willRaiseEvent)
-        //        {
-        //            ProcessReceive(newSocketEventArgs);
-        //        }
-        //    }
-        //    else if(2 == _acceptedTodo)//执行send
-        //    {
-        //        bool willRaiseEvent = token.asyncUserTokenSend.SendAsync();
-        //        if (!willRaiseEvent)
-        //        {
-        //            ProcessSend(newSocketEventArgs);
-        //        }
-        //    }
-        //}
-
-        /// <summary>
         /// 
         /// </summary>
         /// <param name="e"></param>
@@ -345,6 +325,11 @@ namespace Helper
                 else//发送完了
                 {
                     token.asyncUserTokenSend.Reset();
+
+                    if(null != completeSendCallBack)
+                    {
+                        completeSendCallBack(e);
+                    }
 
                     LogHelper.Log(LogType.SUCCESS, "ProcessSend complete");
                 }
