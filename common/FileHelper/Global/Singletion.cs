@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SocketServer.tool
+namespace Helper
 {
     public class Singletion<T> where T : class
     {
