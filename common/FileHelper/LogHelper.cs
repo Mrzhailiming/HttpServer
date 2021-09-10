@@ -14,6 +14,7 @@ namespace Helper
         Error_CMDRepeat,
         Error_CMDIsNull,
         Error_ConnectionReset,
+        Error_BytesTransferred,
         Msg_ProcessCmd,
         Exception_ProcessCmd,
 

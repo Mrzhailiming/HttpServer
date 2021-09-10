@@ -311,8 +311,15 @@ namespace Helper
             }
             else
             {
-                Close(e);
-                LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");
+                if(e.SocketError != SocketError.Success)
+                {
+                    Close(e);
+                    LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");
+                }
+                else
+                {
+                    LogHelper.Log(LogType.Error_BytesTransferred, "ProcessReceive()");
+                }
             }
         }
 
