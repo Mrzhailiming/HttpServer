@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Helper", "common\FileHelper
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataStruct", "common\DataStruct\DataStruct.csproj", "{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "common\Test\Test.csproj", "{011EBE60-7B12-43AB-9E53-CAF0BE5669AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37AFA213-AC76-4ABA-9022-B3EF6BDCF6C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{011EBE60-7B12-43AB-9E53-CAF0BE5669AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{011EBE60-7B12-43AB-9E53-CAF0BE5669AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{011EBE60-7B12-43AB-9E53-CAF0BE5669AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{011EBE60-7B12-43AB-9E53-CAF0BE5669AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
