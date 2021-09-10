@@ -9,11 +9,9 @@ using System.Threading;
 
 namespace SocketServer
 {
-    // Implements the connection logic for the socket server.
-    // After accepting a connection, all data read from the client
-    // is sent back to the client. The read and echo back to the client pattern
-    // is continued until the client disconnects.
-
+    /// <summary>
+    /// 单socket。目前不用了
+    /// </summary>
     class ServerManager
     {
         public static ServerManager Instance = new ServerManager();

@@ -26,14 +26,16 @@ namespace Helper
             FileStream ret = null;
             try
             {
+                string extName = "";
+                name = GetFileExtension(name, out extName);
                 if (!Directory.Exists(filepath))
                 {
                     Directory.CreateDirectory(filepath);
                 }
-                string fileFullPath = $"{filepath}\\{name}";
+                string fileFullPath = $"{filepath}\\{name}.{extName}";
                 if (File.Exists(fileFullPath))
                 {
-                    fileFullPath = $"{filepath}\\new_{DateTime.Now.Ticks}_{name}";
+                    fileFullPath = $"{filepath}\\{name}_{DateTime.Now.Ticks}_{extName}";
                 }
                 ret = new FileStream(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             }
@@ -43,7 +45,12 @@ namespace Helper
             }
             return ret;
         }
-
+        public static string GetFileExtension(string name, out string extName)
+        {
+            int index = name.LastIndexOf('.');
+            extName = name.Substring(index);
+            return name.Substring(0, index);
+        }
         //
         public static FileStream OpenFile(string filepath, string name)
         {

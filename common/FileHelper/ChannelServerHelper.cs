@@ -10,10 +10,6 @@ namespace Helper
     public class ChannelServer
     {
         /// <summary>
-        /// ip:port 作为download通道的寻找client的key，但是task存储的是upload通道的ip:port
-        /// </summary>
-        Dictionary<string, Client> _clientDic = new Dictionary<string, Client>();
-        /// <summary>
         /// 负责上传
         /// </summary>
         ChannelHelper channelUpload;
@@ -36,14 +32,13 @@ namespace Helper
             channelUpload.Listen(_listenBackLog);
             channelUpload.Accept();
 
-
             channelDownload.Bind();
             channelDownload.Listen(_listenBackLog);
             channelDownload.Accept();
         }
         public void SetSendBuffer(EndPoint clientEndPoint, byte[] buff)
         {
-            Client client = FindClient(clientEndPoint.ToString());
+            Client client = Global.FindClient(clientEndPoint.ToString());
             if (null != client)
             {
                 channelDownload.SetSendBuffer(client._clientSocketAsyncEventArgs, buff, 0, buff.Length);
@@ -86,8 +81,7 @@ namespace Helper
             token.exeName = $"server_downloadchannel_{remoteEndPoint}";
 
             //记录一个新链接
-            //_clientDic[remoteEndPoint] = new Client() { _clientSocketAsyncEventArgs = newSocketEventArgs };
-            _clientDic[remoteEndPoint.ToString()] = new Client() { _clientSocketAsyncEventArgs = newSocketEventArgs };
+            Global._clientDic[remoteEndPoint.ToString()] = new Client() { _clientSocketAsyncEventArgs = newSocketEventArgs };
         }
 
         private string GetIP(EndPoint remoteEndPoint)
@@ -96,18 +90,6 @@ namespace Helper
             int endIndex = ret.IndexOf(':');
             return ret.Substring(0, endIndex);
         }
-
-        public Client FindClient(string key)
-        {
-            Client client;
-
-            if(!_clientDic.TryGetValue(key, out client))
-            {
-                client = null;
-            }
-            return client;
-        }
-
         void DownloadProcessCmd(TCPTask task)
         {
             try

@@ -6,6 +6,7 @@ namespace DataStruct
 {
     public enum TCPCMDS
     {
+        LOGIN,
         UPLOAD,
         DOWNLOAD,
     }

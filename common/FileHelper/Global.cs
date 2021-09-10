@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Helper
 {
-    class LoginHelper
+    public class Global
     {
     }
 }

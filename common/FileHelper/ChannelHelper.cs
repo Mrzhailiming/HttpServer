@@ -55,6 +55,9 @@ namespace Helper
         /// </summary>
         private int m_totalBytesRead = 0;
         private Socket _socket { get; }
+        /// <summary>
+        /// bind时候作为本地endpoint， connect的时候作为remoteendpoint
+        /// </summary>
         private IPEndPoint _iPEndPoint;
         private SocketAsyncEventArgsPool _socketAsyncEventArgsPool = new SocketAsyncEventArgsPool();
         private BufferManager _bufferManager;
@@ -99,9 +102,20 @@ namespace Helper
             _bufferManager = new BufferManager(_receiveBufferSize * _maxConnections * 2, _receiveBufferSize);
             _bufferManager.InitBuffer();
         }
-        public void Bind()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="localEndPoint">指定绑定的endpoint，为空绑定默认的</param>
+        public void Bind(EndPoint localEndPoint = null)
         {
-            _socket.Bind(_iPEndPoint);
+            if(null != localEndPoint)
+            {
+                _socket.Bind(localEndPoint);
+            }
+            else
+            {
+                _socket.Bind(_iPEndPoint);
+            }
         }
         public void Listen(int backlog)
         {

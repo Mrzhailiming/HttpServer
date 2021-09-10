@@ -14,6 +14,7 @@ namespace SocketServer
             //指令处理
             CMDImageManager imageManager = new CMDImageManager();
             DownloadFilemanager downloadFilemanager = new DownloadFilemanager();
+            LoginManager loginManager = new LoginManager();
 
             //servermanager.cs
             //IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);

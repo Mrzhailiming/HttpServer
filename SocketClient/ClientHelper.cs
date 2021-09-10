@@ -10,6 +10,9 @@ using System.Threading;
 
 namespace SocketClient
 {
+    /// <summary>
+    /// 单socket，目前不用了
+    /// </summary>
     class ClientHelper
     {
         Socket _socket = null;

@@ -22,12 +22,15 @@ namespace SocketClient
             IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
             IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8081);
 
-            Dictionary<int, ChannelClient> clientDic = new Dictionary<int, ChannelClient>();
+            Dictionary<int, ChannelClientHelper> clientDic = new Dictionary<int, ChannelClientHelper>();
 
-            for(int i = 0; i < 101; ++i)
+            for(int i = 0; i < 100; ++i)
             {
-                ChannelClient client = new ChannelClient(upiPEndPoint, downiPEndPoint, bufferSize);
+                IPEndPoint loaclendPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8088 + i);
+                ChannelClientHelper client = new ChannelClientHelper(upiPEndPoint, downiPEndPoint, loaclendPoint, bufferSize);
+
                 client.Start();
+
                 clientDic[i] = client;
             }
             
@@ -40,7 +43,7 @@ namespace SocketClient
                     if ("s" == ch.ToLower())
                     {
                         string fileFullPath = Console.ReadLine();
-                        foreach(ChannelClient client in clientDic.Values)
+                        foreach(ChannelClientHelper client in clientDic.Values)
                         {
                             client.Send(fileFullPath);
                         }
@@ -48,7 +51,7 @@ namespace SocketClient
                     else if ("g" == ch.ToLower())
                     {
                         string fileFullPath = Console.ReadLine();
-                        foreach (ChannelClient client in clientDic.Values)
+                        foreach (ChannelClientHelper client in clientDic.Values)
                         {
                             client.Get(fileFullPath);
                         }
