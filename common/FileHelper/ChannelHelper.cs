@@ -33,9 +33,9 @@ namespace Helper
         /// <summary>
         /// connect赋值
         /// </summary>
-        SocketAsyncEventArgs _socketEventArg = null;
+        public SocketAsyncEventArgs _socketEventArg = null;
         /// <summary>
-        /// accept一个连接后调用的函数
+        /// accept一个连接后调用的函数, 服务器用
         /// </summary>
         AfterAcceptCallBack afterAcceptCallBack;
         /// <summary>
@@ -311,7 +311,7 @@ namespace Helper
             }
             else
             {
-                if(e.SocketError != SocketError.Success)
+                if(e.SocketError == SocketError.SocketError)//先不关闭连接
                 {
                     Close(e);
                     LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");

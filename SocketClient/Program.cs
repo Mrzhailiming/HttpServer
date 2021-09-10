@@ -14,17 +14,21 @@ namespace SocketClient
             DownloadFilemanager downloadFilemanager = new DownloadFilemanager();
 
             int bufferSize = 1024 * 1024;
-
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
             //ClientHelper client = new ClientHelper(iPEndPoint, 1024 * 1024 * 2);
             //TestClient client = new TestClient(iPEndPoint, 1024 * 1024 * 2);
 
-            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
-            IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8081);
+            //103.46.128.49:18635 //为什么只有这个端口可以连接到server
+            //103.46.128.49 11279
+            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 18635);
+            IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 11279);
+
+            //IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
+            //IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9000);
 
             Dictionary<int, ChannelClientHelper> clientDic = new Dictionary<int, ChannelClientHelper>();
 
-            for(int i = 0; i < 100; ++i)
+            for(int i = 0; i < 10; ++i)
             {
                 IPEndPoint loaclendPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8088 + i);
                 ChannelClientHelper client = new ChannelClientHelper(upiPEndPoint, downiPEndPoint, loaclendPoint, bufferSize);

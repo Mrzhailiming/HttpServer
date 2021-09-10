@@ -27,8 +27,8 @@ namespace SocketServer
             //server1.Init();
             //server1.Start(iPEndPoint);
 
-            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
-            IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8081);
+            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
+            IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9000);
             ChannelServer channelServer = new ChannelServer(upiPEndPoint, downiPEndPoint, receiveBufferSize, numConnections);
             channelServer.Start();
 

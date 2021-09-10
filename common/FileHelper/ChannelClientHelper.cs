@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Helper
 {
@@ -21,6 +22,8 @@ namespace Helper
         IPEndPoint localDownloadiPEndPoint;
 
         byte[] sendBuf;
+
+        Semaphore semaphore = new Semaphore(0, 1);
         public ChannelClientHelper(IPEndPoint RemoteUploadiPEndPoint, IPEndPoint RemoteDownloadiPEndPoint, IPEndPoint LocalDownloadiPEndPoint, int buffSize)
         {
             //和服务器正好相反
@@ -31,7 +34,7 @@ namespace Helper
 
         public void Start()
         {
-            channelDownload.Bind(localDownloadiPEndPoint);
+            //channelDownload.Bind(localDownloadiPEndPoint);//使用花生壳不能连接到server， upchannel却可以，是因为手动绑定IPend吗？是的
 
             channelUpload.Connect(UploadconnectSuccessCallBack);
             channelDownload.Connect(DownloadconnectSuccessCallBack);//
@@ -88,20 +91,28 @@ namespace Helper
 
         public void UploadconnectSuccessCallBack(object sender, SocketAsyncEventArgs connectAsyncEventArgs)
         {
+            //等待downloadchannel连接成功
+            semaphore.WaitOne();
             //do login, tell server my downloadEndPoit
-            string myEndPoint = localDownloadiPEndPoint.ToString();
+            //string myEndPoint = localDownloadiPEndPoint.ToString();
+            //获取channelDownload的endpoint
+            string endPoint = ((AsyncUserToken)channelDownload._socketEventArg.UserToken).Socket.LocalEndPoint.ToString();
+
             CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
 
-            sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.LOGIN, myEndPoint, 0);
+            sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.LOGIN, endPoint, 0);
 
             channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
             channelUpload.BeginSend();
         }
         public void DownloadconnectSuccessCallBack(object sender, SocketAsyncEventArgs connectAsyncEventArgs)
         {
+            semaphore.Release();//唤醒UploadconnectSuccessCallBack
+
             AsyncUserToken token = (AsyncUserToken)connectAsyncEventArgs.UserToken;
             ChannelHelper channelHelper = token._channelHelper as ChannelHelper;
-            token.exeName = $"client_downloadchannel_{token.Socket.RemoteEndPoint}";
+            //token.exeName = $"client_downloadchannel_{token.Socket.RemoteEndPoint}";
+            token.exeName = "haushengke";
             //执行recv
             bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
             if (!willRaiseEvent)
