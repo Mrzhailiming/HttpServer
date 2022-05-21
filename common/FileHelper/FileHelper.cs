@@ -21,7 +21,7 @@ namespace Helper
         /// <param name="filepath"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static FileStream CreateFile(string filepath, string name)
+        public static FileStream CreateFile(string filepath, string name, bool createNew = true)
         {
             FileStream ret = null;
             try
@@ -32,10 +32,10 @@ namespace Helper
                 {
                     Directory.CreateDirectory(filepath);
                 }
-                string fileFullPath = $"{filepath}\\{name}.{extName}";
-                if (File.Exists(fileFullPath))
+                string fileFullPath = $"{filepath}\\{name}{extName}";
+                if (File.Exists(fileFullPath) && createNew)
                 {
-                    fileFullPath = $"{filepath}\\{name}_{DateTime.Now.Ticks}_{extName}";
+                    fileFullPath = $"{filepath}\\{name}_{DateTime.Now.Ticks}{extName}";
                 }
                 ret = new FileStream(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             }

@@ -178,6 +178,13 @@ namespace Helper
                 ProcessSend(_socketEventArg);
             }
         }
+
+        public void Send(byte[] buf)
+        {
+            AsyncUserToken token = (AsyncUserToken)_socketEventArg.UserToken;
+            token.asyncUserTokenSend.Socket.Send(buf);
+        }
+
         /// <summary>
         /// 开始异步接收
         /// </summary>

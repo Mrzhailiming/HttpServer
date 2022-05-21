@@ -4,6 +4,20 @@ using System.Net.Sockets;
 
 namespace DataStruct//应该不牵扯到逻辑代码
 {
+
+    public class Offset
+    {
+        public const int cmdIDOffset = 0;
+        public const int cmdLengthOffset = 4;
+        public const int fileNameLengthOffset = 8;
+        public const int fileTotalLengthOffset = 12;
+        public const int fileKeyOffset = 16;
+        public const int fileNameOffset = 24;
+        /// <summary>
+        /// 文件名的偏移
+        /// </summary>
+        public const int sendOffset = fileNameOffset;
+    }
     public class AsyncUserToken
     {
         public object _channelHelper;
@@ -196,7 +210,6 @@ namespace DataStruct//应该不牵扯到逻辑代码
             {
                 if (needRecvNum <= 0)
                 {
-                    
                     headerBuff = new byte[AsyncEventArgs.BytesTransferred];
 
                     Buffer.BlockCopy(AsyncEventArgs.Buffer, AsyncEventArgs.Offset, headerBuff, 0, AsyncEventArgs.BytesTransferred);
@@ -204,7 +217,7 @@ namespace DataStruct//应该不牵扯到逻辑代码
                     if (hadRecvNum >= 8)
                     {
                         byte[] needRecvNumBuff = new byte[4];
-                        Buffer.BlockCopy(headerBuff, 4, needRecvNumBuff, 0, 4);//
+                        Buffer.BlockCopy(headerBuff, Offset.cmdLengthOffset, needRecvNumBuff, 0, 4);//
                         needRecvNum = BitConverter.ToInt32(needRecvNumBuff);//获取命令包长度
                         recvBuff = new byte[needRecvNum];
                         Buffer.BlockCopy(headerBuff, 0, recvBuff, 0, headerBuff.Length);

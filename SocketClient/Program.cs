@@ -49,6 +49,7 @@ namespace SocketClient
                         foreach(IClientHelper_Interface client in clientDic.Values)
                         {
                             client.Send(fileFullPath);
+                            Console.WriteLine("上传成功!");
                         }
                     }
                     else if ("g" == ch.ToLower())
