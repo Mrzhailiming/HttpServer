@@ -6,9 +6,9 @@ using System.Text;
 
 namespace Helper
 {
-    public class CMDImageManager
+    public class SingleUploadFileManager
     {
-        public CMDImageManager()
+        public SingleUploadFileManager()
         {
             Init();
         }

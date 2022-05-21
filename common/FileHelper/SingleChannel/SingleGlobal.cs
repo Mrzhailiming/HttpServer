@@ -8,25 +8,18 @@ namespace Helper
     /// <summary>
     /// 双channel通信
     /// </summary>
-    public class Global
+    public class SingleGlobal
     {
         /// <summary>
         /// ip:port 作为download通道的寻找client的key，但是task存储的是upload通道的ip:port
         /// </summary>
         public static Dictionary<string, Client> _clientDic = new Dictionary<string, Client>();
 
-        public static Dictionary<string, string> _upIP2dowmIP = new Dictionary<string, string>();
-
-        public static Client FindClient(string upLoadIP)
+        public static Client FindClient(string ClientIP)
         {
-            string downLoadIP;
             Client client;
-            if (!_upIP2dowmIP.TryGetValue(upLoadIP, out downLoadIP))
-            {
-                return null;
-            }
 
-            if(!_clientDic.TryGetValue(downLoadIP, out client))
+            if(!_clientDic.TryGetValue(ClientIP, out client))
             {
                 return null;
             }

@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Helper
 {
@@ -165,7 +166,7 @@ namespace Helper
         }
 
         /// <summary>
-        /// 开始发送，异步（客户端使用）
+        /// 开始发送，异步
         /// </summary>
         /// <param name="sendBuf"></param>
         public void BeginSend()
@@ -175,6 +176,30 @@ namespace Helper
             if (!willRaiseEvent)
             {
                 ProcessSend(_socketEventArg);
+            }
+        }
+        /// <summary>
+        /// 开始异步接收
+        /// </summary>
+        public void BeginRecv(SocketAsyncEventArgs socketAsyncEventArgs)
+        {
+            AsyncUserToken token = (AsyncUserToken)socketAsyncEventArgs.UserToken;
+            bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
+            if (!willRaiseEvent)
+            {
+                ProcessReceive(socketAsyncEventArgs);
+            }
+        }
+        /// <summary>
+        /// 开始同步接收
+        /// </summary>
+        public void BeginRecv_new(SocketAsyncEventArgs socketAsyncEventArgs)
+        {
+            AsyncUserToken token = (AsyncUserToken)socketAsyncEventArgs.UserToken;
+            bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
+            if (!willRaiseEvent)
+            {
+                ProcessReceive_new(socketAsyncEventArgs);
             }
         }
         /// <summary>
@@ -269,8 +294,18 @@ namespace Helper
             Accept();
         }
 
+        //public async void RecvAsync()
+        //{
+        //    await Task.Run();
+        //}
+
+        //public void runAsync(object o)
+        //{
+
+        //}
+
         /// <summary>
-        /// 
+        /// 异步
         /// </summary>
         /// <param name="e"></param>
         public void ProcessReceive(SocketAsyncEventArgs e)
@@ -279,6 +314,16 @@ namespace Helper
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
             if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
+                //// 判断所有需接收的数据是否已经完成
+                //if (token.Socket.Available != 0)
+                //{
+                //    bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();
+                //    if (!willRaiseEvent)
+                //    {
+                //        ProcessReceive(e);
+                //    }
+                //}
+
                 Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
                 Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
 
@@ -303,6 +348,7 @@ namespace Helper
 
                     if (completeRecv_Recv)
                     {
+                        //token.asyncUserTokenRecv.AsyncEventArgs.SetBuffer(0, 1024 * 1024);
                         token.asyncUserTokenRecv.ReceiveAsync();//继续接收
                     }
 
@@ -322,6 +368,59 @@ namespace Helper
                 }
             }
         }
+
+        /// <summary>
+        /// t同步
+        /// </summary>
+        /// <param name="e"></param>
+        public void ProcessReceive_new(SocketAsyncEventArgs e)
+        {
+            // check if the remote host closed the connection
+            AsyncUserToken token = (AsyncUserToken)e.UserToken;
+            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
+            {
+                Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
+                Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
+
+                token.asyncUserTokenRecv.BuffCopy();
+                while (!token.asyncUserTokenRecv.Check())
+                {
+                    byte[] recvBuff = new byte[_receiveBufferSize];
+                    int recvCount = token.asyncUserTokenRecv.Receive(recvBuff);
+                    token.asyncUserTokenRecv.BuffCopy_new(recvBuff, recvCount);
+                }
+                //else
+                {
+                    TCPTask task = new TCPTask(token.Socket, token.asyncUserTokenRecv.recvBuff, e, _server);
+                    token.asyncUserTokenRecv.Reset();
+
+                    if (null != processCmd)
+                    {
+                        processCmd(task);//做成异步的
+                    }
+
+                    if (completeRecv_Recv)
+                    {
+                        token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+                    }
+
+                    LogHelper.Log(LogType.SUCCESS, "ProcessReceive complete");
+                }
+            }
+            else
+            {
+                if (e.SocketError == SocketError.SocketError)//先不关闭连接
+                {
+                    Close(e);
+                    LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");
+                }
+                else
+                {
+                    LogHelper.Log(LogType.Error_BytesTransferred, "ProcessReceive()");
+                }
+            }
+        }
+
 
         /// <summary>
         /// 

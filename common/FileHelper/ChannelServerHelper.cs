@@ -7,7 +7,7 @@ using System.Net.Sockets;
 
 namespace Helper
 {
-    public class ChannelServer
+    public class ChannelServer : IChannelServer_Interface
     {
         /// <summary>
         /// 负责上传

@@ -9,28 +9,28 @@ namespace SocketServer
         static void Main(string[] args)
         {
             int numConnections = 101;
-            int receiveBufferSize = 1024 * 1024;
+            int receiveBufferSize = 1024 * 1024 * 10;
 
-            //指令处理
-            CMDImageManager imageManager = new CMDImageManager();
-            DownloadFilemanager downloadFilemanager = new DownloadFilemanager();
-            LoginManager loginManager = new LoginManager();
+            //双通指令处理
+            //UploadFilemanager imageManager = new UploadFilemanager();
+            //DownloadFilemanager downloadFilemanager = new DownloadFilemanager();
+            //LoginManager loginManager = new LoginManager();//双通道login
 
-            //servermanager.cs
-            //IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
-            //ServerManager server = new ServerManager(numConnections, receiveBufferSize);
-            //server.Init();
-            //server.Start(iPEndPoint);
+            //单通
+            SingleDownloadFilemanager singledownloadFilemanager = new SingleDownloadFilemanager();
+            SingleServerLoginManager singleServerLoginManager = new SingleServerLoginManager();//单通道
+            SingleUploadFileManager singleUploadManager = new SingleUploadFileManager();
 
-            //testserver.cs
-            //Server server1 = new Server(numConnections, receiveBufferSize);
-            //server1.Init();
-            //server1.Start(iPEndPoint);
 
             IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
             IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9000);
-            ChannelServer channelServer = new ChannelServer(upiPEndPoint, downiPEndPoint, receiveBufferSize, numConnections);
-            channelServer.Start();
+
+            //双通道
+            //ChannelServer channelServer = new ChannelServer(upiPEndPoint, downiPEndPoint, receiveBufferSize, numConnections);
+            //channelServer.Start();
+
+            SingleChannelServer singleChannel = new SingleChannelServer(upiPEndPoint, downiPEndPoint, receiveBufferSize, numConnections);
+            singleChannel.Start();
 
             Console.WriteLine("Hello World!");
             Console.ReadLine();

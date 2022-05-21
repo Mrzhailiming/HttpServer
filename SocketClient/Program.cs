@@ -10,28 +10,27 @@ namespace SocketClient
         static void Main(string[] args)
         {
             //指令处理
-            CMDImageManager imageManager = new CMDImageManager();
-            DownloadFilemanager downloadFilemanager = new DownloadFilemanager();
+            //UploadFilemanager imageManager = new UploadFilemanager();
+            SingleClientDownloadFilemanager downloadFilemanager = new SingleClientDownloadFilemanager();
+            SingleClientLoginManager loginManager = new SingleClientLoginManager();//单通道
+
 
             int bufferSize = 1024 * 1024;
-            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
-            //ClientHelper client = new ClientHelper(iPEndPoint, 1024 * 1024 * 2);
-            //TestClient client = new TestClient(iPEndPoint, 1024 * 1024 * 2);
 
-            //103.46.128.49:18635 //为什么只有这个端口可以连接到server
+            //103.46.128.49:18635 //为什么只有这个端口可以连接到server，花生壳？
             //103.46.128.49 11279
-            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 18635);
-            IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 11279);
+            //IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 18635);
+            //IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 11279);
 
-            //IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
-            //IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9000);
+            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
+            IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9000);
 
-            Dictionary<int, ChannelClientHelper> clientDic = new Dictionary<int, ChannelClientHelper>();
+            Dictionary<int, IClientHelper_Interface> clientDic = new Dictionary<int, IClientHelper_Interface>();
 
-            for(int i = 0; i < 10; ++i)
+            for(int i = 0; i < 1; ++i)
             {
                 IPEndPoint loaclendPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8088 + i);
-                ChannelClientHelper client = new ChannelClientHelper(upiPEndPoint, downiPEndPoint, loaclendPoint, bufferSize);
+                IClientHelper_Interface client = new SingleChannelClientHelper(upiPEndPoint, downiPEndPoint, loaclendPoint, bufferSize);
 
                 client.Start();
 
@@ -47,7 +46,7 @@ namespace SocketClient
                     if ("s" == ch.ToLower())
                     {
                         string fileFullPath = Console.ReadLine();
-                        foreach(ChannelClientHelper client in clientDic.Values)
+                        foreach(IClientHelper_Interface client in clientDic.Values)
                         {
                             client.Send(fileFullPath);
                         }
@@ -55,7 +54,7 @@ namespace SocketClient
                     else if ("g" == ch.ToLower())
                     {
                         string fileFullPath = Console.ReadLine();
-                        foreach (ChannelClientHelper client in clientDic.Values)
+                        foreach (IClientHelper_Interface client in clientDic.Values)
                         {
                             client.Get(fileFullPath);
                         }

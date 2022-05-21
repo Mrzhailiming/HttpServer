@@ -171,9 +171,24 @@ namespace DataStruct//应该不牵扯到逻辑代码
             }
             return true;
         }
-
         /// <summary>
-        /// 将接收到数据的复制到recvBuff
+        /// 同步
+        /// </summary>
+        /// <returns></returns>
+        public int Receive(byte[] recvBuff)
+        {
+            try
+            {
+                return Socket.Receive(recvBuff);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ReceiveAsync异常：{0}", ex.ToString());
+            }
+            return 0;
+        }
+        /// <summary>
+        /// 将异步接收到数据的复制到recvBuff
         /// </summary>
         public void BuffCopy()
         {
@@ -209,6 +224,46 @@ namespace DataStruct//应该不牵扯到逻辑代码
                 Console.WriteLine("BuffCopy异常{0}：", ex.ToString());
             }
         }
+
+        /// <summary>
+        /// 将同步接收到数据的复制到recvBuff
+        /// </summary>
+        public void BuffCopy_new(byte[] recvBuff, int count)
+        {
+            try
+            {
+                //if (needRecvNum <= 0)
+                //{
+
+                //    headerBuff = new byte[AsyncEventArgs.BytesTransferred];
+
+                //    Buffer.BlockCopy(AsyncEventArgs.Buffer, AsyncEventArgs.Offset, headerBuff, 0, AsyncEventArgs.BytesTransferred);
+                //    hadRecvNum += AsyncEventArgs.BytesTransferred;
+                //    if (hadRecvNum >= 8)
+                //    {
+                //        byte[] needRecvNumBuff = new byte[4];
+                //        Buffer.BlockCopy(headerBuff, 4, needRecvNumBuff, 0, 4);//
+                //        needRecvNum = BitConverter.ToInt32(needRecvNumBuff);//获取命令包长度
+                //        recvBuff = new byte[needRecvNum];
+                //        Buffer.BlockCopy(headerBuff, 0, recvBuff, 0, headerBuff.Length);
+                //    }
+                //}
+                //else 
+                if (hadRecvNum < needRecvNum)
+                {
+                    //AsyncEventArgs.BytesTransferred 大于剩余需要拷贝的字节数，说明下一条数据来了
+                    int realCopy = count <= (needRecvNum - hadRecvNum) ? count : (needRecvNum - hadRecvNum);
+                    Buffer.BlockCopy(recvBuff, 0, recvBuff, hadRecvNum, realCopy);
+
+                    hadRecvNum += realCopy;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("BuffCopy异常{0}：", ex.ToString());
+            }
+        }
+
         public bool Check()
         {
             if(hadRecvNum == needRecvNum)
