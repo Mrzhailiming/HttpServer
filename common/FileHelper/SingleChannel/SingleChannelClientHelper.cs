@@ -116,10 +116,9 @@ namespace Helper
 
             CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
 
-            sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.LOGIN, endPoint, 0);
-
-            channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
-            channelUpload.BeginSend();
+            //sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.LOGIN, endPoint, 0);
+            //channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
+            //channelUpload.BeginSend();
         }
 
         void ProcessCmd(TCPTask task)

@@ -244,13 +244,13 @@ namespace Helper
 
             try
             {
-                token.Socket.Shutdown(SocketShutdown.Send);
+                token.Socket?.Shutdown(SocketShutdown.Send);
+                token.Socket?.Close();
             }
             catch (Exception ex)
             {
                 LogHelper.Log(LogType.Exception, ex.ToString());
             }
-            token.Socket.Close();
 
             _socketAsyncEventArgsPool.Push(socketAsyncEventArgs);
         }
@@ -282,7 +282,8 @@ namespace Helper
         private void ProcessAccept(SocketAsyncEventArgs e)
         {
             //ReadEventArg object user token
-            SocketAsyncEventArgs newSocketEventArgs = _socketAsyncEventArgsPool.Pop();//取出一个socket事件
+            //SocketAsyncEventArgs newSocketEventArgs = _socketAsyncEventArgsPool.Pop();//取出一个socket事件
+            SocketAsyncEventArgs newSocketEventArgs = new SocketAsyncEventArgs();//取出一个socket事件
             newSocketEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);//绑定回调
 
             _bufferManager.SetBuffer(newSocketEventArgs);//为socket设置缓冲区
@@ -319,7 +320,7 @@ namespace Helper
         {
             // check if the remote host closed the connection
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
-            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
+            if (e.SocketError == SocketError.Success )
             {
                 //// 判断所有需接收的数据是否已经完成
                 //if (token.Socket.Available != 0)
@@ -330,6 +331,11 @@ namespace Helper
                 //        ProcessReceive(e);
                 //    }
                 //}
+                if(e.BytesTransferred <= 0)
+                {
+                    Close(e);
+                    return;
+                }
 
                 Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
                 Console.WriteLine($"The server has read a total of {m_totalBytesRead} bytes curbytes:{e.BytesTransferred}");
@@ -356,7 +362,11 @@ namespace Helper
                     if (completeRecv_Recv)
                     {
                         //token.asyncUserTokenRecv.AsyncEventArgs.SetBuffer(0, 1024 * 1024);
-                        token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+                        bool willRaiseEvent = token.asyncUserTokenRecv.ReceiveAsync();//继续接收
+                        if (!willRaiseEvent)
+                        {
+                            ProcessReceive(e);
+                        }
                     }
 
                     LogHelper.Log(LogType.SUCCESS, "ProcessReceive complete");
@@ -367,11 +377,12 @@ namespace Helper
                 if(e.SocketError == SocketError.SocketError)//先不关闭连接
                 {
                     Close(e);
-                    LogHelper.Log(LogType.Error_ConnectionReset, "ProcessReceive()");
+                    LogHelper.Log(LogType.Error_ConnectionReset, $"ProcessReceive {SocketError.SocketError}");
                 }
                 else
                 {
-                    LogHelper.Log(LogType.Error_BytesTransferred, "ProcessReceive()");
+                    LogHelper.Log(LogType.Error_BytesTransferred, $"ProcessReceive() {SocketError.SocketError}");
+                    Close(e);
                 }
             }
         }

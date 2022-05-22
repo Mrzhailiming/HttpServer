@@ -33,7 +33,8 @@ namespace Helper
             string loginResult = "0";//暂时用0表示成功
             byte[] sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.LOGIN, loginResult, 0);
 
-            channelServer.SetSendBuffer(task.clientEndPoint, sendBuf);//向客户端发送登录结果
+            // 不发送
+            //channelServer.SetSendBuffer(task.clientEndPoint, sendBuf);//向客户端发送登录结果
         }
     }
 }
