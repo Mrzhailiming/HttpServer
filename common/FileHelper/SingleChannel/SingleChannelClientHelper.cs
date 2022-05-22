@@ -34,42 +34,50 @@ namespace Helper
         }
         public void Send(string fileFullPath)
         {
-            CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
-            long key = DateTime.Now.Ticks;
-            using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            try
             {
-                string fileName = FileHelper.GetFileName(fileFullPath);
 
-                byte[] fileBuf = Encoding.Default.GetBytes(fileName);
-                int fileNameLength = fileBuf.Length;
-                int sendOffset = Offset.sendOffset;//命令头的偏移
 
-                BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
-                int perSendFileLen = 1024 * 1024; // 每次发送500个字节
-                int curOffset = 0;
-                while (curOffset < (int)fs.Length)
+                CmdBufferHelper cmdBufferHelper = new CmdBufferHelper();
+                long key = DateTime.Now.Ticks;
+                using (FileStream fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    int leave = (int)fs.Length - curOffset;
-                    perSendFileLen = perSendFileLen < leave ? perSendFileLen : leave;
-                    binaryReader.BaseStream.Seek(curOffset, SeekOrigin.Begin);
+                    string fileName = FileHelper.GetFileName(fileFullPath);
 
-                    sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, perSendFileLen, (int)fs.Length, key);
+                    byte[] fileBuf = Encoding.Default.GetBytes(fileName);
+                    int fileNameLength = fileBuf.Length;
+                    int sendOffset = Offset.sendOffset;//命令头的偏移
 
-                    binaryReader.Read(sendBuf, sendOffset + fileNameLength, sendBuf.Length - sendOffset - fileNameLength);
-                    channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
-                    channelUpload.Send(sendBuf);
+                    BinaryReader binaryReader = new BinaryReader(fs);//用二进制流
+                    int perSendFileLen = 1024 * 1024; // 每次发送500个字节
+                    int curOffset = 0;
+                    while (curOffset < (int)fs.Length)
+                    {
+                        int leave = (int)fs.Length - curOffset;
+                        perSendFileLen = perSendFileLen < leave ? perSendFileLen : leave;
+                        binaryReader.BaseStream.Seek(curOffset, SeekOrigin.Begin);
 
-                    curOffset += perSendFileLen;
+                        sendBuf = cmdBufferHelper.GetSendBuff((int)TCPCMDS.UPLOAD, fileName, perSendFileLen, (int)fs.Length, key);
 
-                    Thread.Sleep(1000 * 2);
-                    Console.WriteLine("正在上传......");
+                        binaryReader.Read(sendBuf, sendOffset + fileNameLength, sendBuf.Length - sendOffset - fileNameLength);
+                        channelUpload.SetSendBuffer(sendBuf, 0, sendBuf.Length);
+                        channelUpload.Send(sendBuf);
+
+                        curOffset += perSendFileLen;
+
+                        Thread.Sleep(1000 * 2);
+                        Console.WriteLine("正在上传......");
+                    }
+
+                    binaryReader.Close();
+                    binaryReader.Dispose();
                 }
 
-                binaryReader.Close();
-                binaryReader.Dispose();
             }
-
-            
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex}");
+            }
         }
 
         private void ResetSendBuff()

@@ -332,7 +332,7 @@ namespace Helper
                 //}
 
                 Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
-                Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
+                Console.WriteLine($"The server has read a total of {m_totalBytesRead} bytes curbytes:{e.BytesTransferred}");
 
                 token.asyncUserTokenRecv.BuffCopy();
                 if (!token.asyncUserTokenRecv.Check())
