@@ -22,7 +22,7 @@ namespace SocketClient
             //IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 18635);
             //IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.49"), 11279);
 
-            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("192.168.1.10"), 8000);
+            IPEndPoint upiPEndPoint = new IPEndPoint(IPAddress.Parse("103.46.128.21"), 49894);
             IPEndPoint downiPEndPoint = new IPEndPoint(IPAddress.Parse("192.168.1.10"), 9000);
 
             Dictionary<int, IClientHelper_Interface> clientDic = new Dictionary<int, IClientHelper_Interface>();
